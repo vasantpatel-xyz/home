@@ -6,37 +6,24 @@
   <title>Matt Damon Facts</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
-    :root{--cream:#f5f0e8;--parchment:#ede6d8;--warm-dark:#0d0d0f;--blue:#2e6be6;--blue-light:#5b8ff9;--char:#1c1c1e;--ash:#7a7a8a;--smoke:#b0afc0;}
+    :root{--cream:#f5f0e8;--warm-dark:#0d0d0f;--blue:#2e6be6;--blue-light:#5b8ff9;--ash:#7a7a8a;--smoke:#b0afc0;}
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:var(--warm-dark);color:var(--cream);min-height:100vh;overflow-x:hidden;}
-    body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 60% at 15% 20%,rgba(46,107,230,.10) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 85% 80%,rgba(91,143,249,.07) 0%,transparent 60%);pointer-events:none;z-index:0;}
-    .page{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:48px 20px 80px;}
+    body{font-family:'DM Sans',sans-serif;background:var(--warm-dark);color:var(--cream);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 60% at 15% 20%,rgba(46,107,230,.10) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 85% 80%,rgba(91,143,249,.07) 0%,transparent 60%);pointer-events:none;}
 
-    .header{text-align:center;margin-bottom:40px;animation:fadeUp .5s ease both;}
+    .page{max-width:580px;width:90%;text-align:center;padding:2rem 0;}
+
+    .header{margin-bottom:3rem;}
     .logo-mark{font-size:40px;display:block;margin-bottom:12px;filter:drop-shadow(0 0 16px rgba(46,107,230,.4));}
     h1{font-family:'Playfair Display',serif;font-size:clamp(36px,9vw,56px);font-weight:900;letter-spacing:-.02em;line-height:.95;color:var(--cream);}
     h1 em{font-style:normal;color:var(--blue-light);}
     .subtitle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);margin-top:10px;}
 
-    .fact-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:32px 28px;margin-bottom:16px;animation:fadeUp .5s .08s ease both;min-height:180px;display:flex;flex-direction:column;justify-content:center;}
-    .fact-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:16px;}
-    .fact-text{font-family:'Playfair Display',serif;font-size:clamp(18px,4vw,22px);line-height:1.6;color:var(--cream);transition:opacity .35s ease;}
-    .fact-text.fade{opacity:0;}
+    .fact-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:36px 32px;animation:fadeUp .5s ease both;}
+    .fact-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:20px;}
+    .fact-text{font-family:'Playfair Display',serif;font-size:clamp(18px,4vw,22px);line-height:1.65;color:var(--cream);}
 
-    .counter-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;animation:fadeUp .5s .12s ease both;}
-    .counter{font-family:'DM Mono',monospace;font-size:11px;color:var(--ash);letter-spacing:.08em;}
-    .progress{flex:1;height:2px;background:rgba(255,255,255,.08);border-radius:2px;margin:0 16px;overflow:hidden;}
-    .progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .35s ease;}
-
-    .btn-row{display:flex;gap:12px;animation:fadeUp .5s .16s ease both;}
-    .btn{flex:1;padding:14px 20px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--smoke);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
-    .btn:hover{border-color:var(--blue);color:var(--cream);background:rgba(46,107,230,.1);}
-    .btn.primary{background:var(--blue);border-color:var(--blue);color:white;box-shadow:0 4px 20px rgba(46,107,230,.3);}
-    .btn.primary:hover{background:var(--blue-light);border-color:var(--blue-light);box-shadow:0 6px 28px rgba(46,107,230,.45);}
-
-    .meta-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:18px 20px;margin-top:16px;animation:fadeUp .5s .2s ease both;}
-    .meta-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;font-family:'DM Mono',monospace;font-size:11px;color:var(--ash);}
-    .meta-row strong{color:var(--cream);font-weight:500;}
+    .hint{margin-top:2rem;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ash);opacity:.5;}
 
     @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
   </style>
@@ -46,8 +33,8 @@
 
   <div class="header">
     <span class="logo-mark">🎬</span>
-    <h1>Matt <em>Damon</em><br>Facts</h1>
-    <p class="subtitle">One fact at a time</p>
+    <h1>Matt <em>Damon</em></h1>
+    <p class="subtitle">Facts for the devoted</p>
   </div>
 
   <div class="fact-card">
@@ -55,75 +42,32 @@
     <div class="fact-text" id="factText"></div>
   </div>
 
-  <div class="counter-row">
-    <span class="counter" id="counter">1 / 15</span>
-    <div class="progress"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-  </div>
-
-  <div class="btn-row">
-    <button class="btn" onclick="prevFact()">← Prev</button>
-    <button class="btn primary" onclick="nextFact()">Next fact →</button>
-  </div>
-
-  <div class="meta-card">
-    <div class="meta-row"><span>Facts loaded</span><strong>15</strong></div>
-    <div class="meta-row"><span>Current</span><strong id="metaCurrent">1</strong></div>
-    <div class="meta-row"><span>Remaining</span><strong id="metaRemaining">14</strong></div>
-  </div>
+  <p class="hint">Refresh for another</p>
 
 </div>
 <script>
   const facts = [
-    "Matt Damon wrote the screenplay for Good Will Hunting with Ben Affleck while they were still unknowns. They sold it for $675,000.",
-    "He graduated from Harvard — but left just 12 credits short of his degree to film Good Will Hunting. Harvard later gave him an honorary degree.",
-    "Damon gained 30 pounds for his role in The Informant! by eating cheese and drinking beer every day.",
-    "He was paid only $1,000 upfront for the Good Will Hunting script but received $300,000 after rewriting it with Robin Williams in mind.",
-    "Matt Damon has appeared in films that have grossed over $5 billion at the US box office alone.",
-    "He was replaced by Tom Hanks in Cast Away and replaced Tom Hanks in Saving Private Ryan — the roles essentially swapped between them.",
-    "Damon trained with Navy SEALs for three months to prepare for his role in Green Zone.",
-    "He and Ben Affleck have been best friends since they were eight years old, growing up two blocks apart in Cambridge, Massachusetts.",
-    "Matt Damon turned down the lead role in Avatar — a decision he later called the most expensive mistake of his career.",
-    "He lost 60 pounds for his role in Courage Under Fire by crash dieting, which he later said caused long-term adrenal gland damage.",
-    "Damon was cast as Jason Bourne after director Doug Liman saw him in Talented Mr. Ripley and thought he could look both innocent and dangerous.",
-    "He appeared as himself in 30 Rock, Eurotrip, and Entourage — and none of those characters were particularly flattering.",
-    "The Martian required Damon to film scenes in a spacesuit for weeks in the Jordan desert at temperatures exceeding 110°F.",
-    "He co-founded water.org with Gary White, which has helped over 40 million people gain access to safe water and sanitation.",
-    "Damon was ranked #1 on Forbes' list of most bankable stars — meaning films starring him had the highest return on investment in Hollywood.",
+    "Matt Damon left Harvard 12 credits short of graduating to film Good Will Hunting. Harvard eventually gave him an honorary degree, which he accepted looking extremely smug and deservedly so.",
+    "He sold the Good Will Hunting screenplay for $675,000. Ben Affleck used his half to buy a leather jacket. Matt Damon used his to become Matt Damon.",
+    "Damon turned down Avatar. He would have earned roughly $250 million. He once said it was 'probably a mistake.' Probably.",
+    "He lost 60 pounds for Courage Under Fire by barely eating. His adrenal gland never forgave him. Neither did his personal trainer.",
+    "Matt Damon has been rescued in more films than any other A-list actor — Saving Private Ryan, The Martian, Interstellar, Elysium. Hollywood keeps putting him in danger just to get him out of it.",
+    "He and Ben Affleck have been best friends since age 8. They grew up two blocks apart in Cambridge, met on a baseball diamond, and have been insufferably close ever since.",
+    "Jason Bourne was originally described as a 'grizzled, older spy.' Damon got the role after Doug Liman saw him in Talented Mr. Ripley and thought he had the face of someone who could kill you and apologize about it.",
+    "He gained 30 pounds for The Informant! by eating cheese and drinking beer. He has described this as the most enjoyable research he has ever done.",
+    "Damon trained with Navy SEALs for Green Zone. The SEALs reportedly found this delightful.",
+    "He starred in The Martian, a film about a man left alone on Mars who survives by farming potatoes. Matt Damon has since refused to confirm or deny whether he knows how to grow potatoes in real life.",
+    "His cameo in Eurotrip — where he plays a punk rock singer — is so brief and so unhinged that most viewers assume they imagined it. They did not.",
+    "Damon co-founded water.org, which has brought clean water access to over 40 million people. He also once got roasted on 30 Rock for 14 seasons. The man contains multitudes.",
+    "Forbes ranked him the most bankable star in Hollywood, meaning studios make more money per dollar spent on Matt Damon than anyone else. He is, financially speaking, a reliable appliance.",
+    "He replaced Tom Hanks in Saving Private Ryan after Hanks dropped out for Cast Away. Tom Hanks was then replaced in Cast Away by a volleyball named Wilson. Everyone came out fine.",
+    "Matt Damon has an IQ reported to be around 160. He used this to write Good Will Hunting, turn down Avatar, and spend 30 years being best friends with Ben Affleck. Make of that what you will.",
+    "He once described his preparation for playing a CIA operative as 'mostly just looking concerned in nice coats.' Critics agreed this was very convincing.",
+    "His daughter once told an interviewer that her dad is 'just a guy who watches a lot of TV.' This is the most humanizing thing ever said about Matt Damon.",
+    "Damon has appeared on screen with George Clooney so many times that film historians now track it as a recurring natural phenomenon, like solar flares.",
   ];
 
-  let current = 0;
-
-  function render(animate) {
-    const el = document.getElementById('factText');
-    const total = facts.length;
-
-    if (animate) {
-      el.classList.add('fade');
-      setTimeout(() => {
-        el.textContent = facts[current];
-        el.classList.remove('fade');
-      }, 350);
-    } else {
-      el.textContent = facts[current];
-    }
-
-    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
-    document.getElementById('progressFill').style.width = ((current + 1) / total * 100) + '%';
-    document.getElementById('metaCurrent').textContent = current + 1;
-    document.getElementById('metaRemaining').textContent = total - current - 1;
-  }
-
-  function nextFact() {
-    current = (current + 1) % facts.length;
-    render(true);
-  }
-
-  function prevFact() {
-    current = (current - 1 + facts.length) % facts.length;
-    render(true);
-  }
-
-  render(false);
+  document.getElementById('factText').textContent = facts[Math.floor(Math.random() * facts.length)];
 </script>
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "REPLACE_WITH_YOUR_TOKEN"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
