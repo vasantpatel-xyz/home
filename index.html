@@ -3,71 +3,162 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Matt Damon Facts</title>
+  <title>What's My IP</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
-    :root{--cream:#f5f0e8;--warm-dark:#0d0d0f;--blue:#2e6be6;--blue-light:#5b8ff9;--ash:#7a7a8a;--smoke:#b0afc0;}
+    :root{--cream:#f5f0e8;--warm-dark:#0d0d0f;--blue:#2e6be6;--blue-light:#5b8ff9;--green:#4caf82;--amber:#e8a030;--ash:#7a7a8a;--smoke:#b0afc0;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);}
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:var(--warm-dark);color:var(--cream);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-    body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 60% at 15% 20%,rgba(46,107,230,.10) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 85% 80%,rgba(91,143,249,.07) 0%,transparent 60%);pointer-events:none;}
+    body{font-family:'DM Sans',sans-serif;background:var(--warm-dark);color:var(--cream);min-height:100vh;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 60% at 15% 20%,rgba(46,107,230,.10) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 85% 80%,rgba(76,175,130,.06) 0%,transparent 60%);pointer-events:none;z-index:0;}
+    .page{position:relative;z-index:1;max-width:600px;margin:0 auto;padding:48px 20px 80px;}
 
-    .page{max-width:580px;width:90%;text-align:center;padding:2rem 0;}
-
-    .header{margin-bottom:3rem;}
-    .logo-mark{font-size:40px;display:block;margin-bottom:12px;filter:drop-shadow(0 0 16px rgba(46,107,230,.4));}
-    h1{font-family:'Playfair Display',serif;font-size:clamp(36px,9vw,56px);font-weight:900;letter-spacing:-.02em;line-height:.95;color:var(--cream);}
+    .header{text-align:center;margin-bottom:40px;animation:fadeUp .5s ease both;}
+    .logo-mark{font-size:36px;display:block;margin-bottom:12px;}
+    h1{font-family:'Playfair Display',serif;font-size:clamp(32px,8vw,48px);font-weight:900;letter-spacing:-.02em;line-height:.95;color:var(--cream);}
     h1 em{font-style:normal;color:var(--blue-light);}
     .subtitle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);margin-top:10px;}
 
-    .fact-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:36px 32px;animation:fadeUp .5s ease both;}
-    .fact-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:20px;}
-    .fact-text{font-family:'Playfair Display',serif;font-size:clamp(18px,4vw,22px);line-height:1.65;color:var(--cream);}
+    /* IP hero */
+    .ip-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 28px;margin-bottom:12px;text-align:center;animation:fadeUp .5s .06s ease both;}
+    .ip-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:16px;}
+    .ip-value{font-family:'DM Mono',monospace;font-size:clamp(28px,7vw,42px);font-weight:500;color:var(--blue-light);letter-spacing:.04em;word-break:break-all;}
+    .ip-value.loading{color:var(--ash);font-size:18px;animation:pulse 1.5s ease infinite;}
+    .copy-btn{margin-top:20px;padding:10px 24px;background:transparent;border:1.5px solid var(--border);border-radius:100px;color:var(--smoke);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+    .copy-btn:hover{border-color:var(--blue);color:var(--blue-light);}
+    .copy-btn.copied{border-color:var(--green);color:var(--green);}
 
-    .hint{margin-top:2rem;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ash);opacity:.5;}
+    /* Detail grid */
+    .detail-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 28px;margin-bottom:12px;animation:fadeUp .5s .12s ease both;}
+    .detail-header{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:16px;}
+    .detail-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+    .detail-row:last-child{border-bottom:none;}
+    .detail-key{font-family:'DM Mono',monospace;font-size:12px;color:var(--smoke);}
+    .detail-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--cream);text-align:right;max-width:60%;word-break:break-all;}
+    .detail-val.loading{color:var(--ash);animation:pulse 1.5s ease infinite;}
+    .badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-left:8px;}
+    .badge-prisma{background:rgba(46,107,230,.2);color:var(--blue-light);}
+    .badge-unknown{background:rgba(255,255,255,.08);color:var(--smoke);}
+
+    /* Browser info */
+    .browser-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 28px;margin-bottom:12px;animation:fadeUp .5s .18s ease both;}
+
+    /* Whitelist callout */
+    .callout{background:rgba(46,107,230,.08);border:1px solid rgba(46,107,230,.2);border-radius:16px;padding:18px 22px;margin-bottom:12px;animation:fadeUp .5s .22s ease both;}
+    .callout-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue-light);margin-bottom:8px;}
+    .callout-text{font-size:13px;color:var(--smoke);line-height:1.6;}
+    .callout-text strong{color:var(--cream);}
 
     @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   </style>
 </head>
 <body>
 <div class="page">
 
   <div class="header">
-    <span class="logo-mark">🎬</span>
-    <h1>Matt <em>Damon</em></h1>
-    <p class="subtitle">Facts for the devoted</p>
+    <span class="logo-mark">🔍</span>
+    <h1>Your <em>Network</em><br>Info</h1>
+    <p class="subtitle">For access & whitelisting</p>
   </div>
 
-  <div class="fact-card">
-    <div class="fact-label">Did you know</div>
-    <div class="fact-text" id="factText"></div>
+  <!-- IP Hero -->
+  <div class="ip-card">
+    <div class="ip-label">Your public IP address</div>
+    <div class="ip-value loading" id="ipValue">Resolving…</div>
+    <button class="copy-btn" id="copyBtn" onclick="copyIP()">Copy IP</button>
   </div>
 
-  <p class="hint">Refresh for another</p>
+  <!-- Network detail -->
+  <div class="detail-card">
+    <div class="detail-header">Network details</div>
+    <div class="detail-row"><span class="detail-key">ISP / Org</span><span class="detail-val loading" id="dOrg">—</span></div>
+    <div class="detail-row"><span class="detail-key">ASN</span><span class="detail-val loading" id="dAsn">—</span></div>
+    <div class="detail-row"><span class="detail-key">Hostname</span><span class="detail-val loading" id="dHostname">—</span></div>
+    <div class="detail-row"><span class="detail-key">Location</span><span class="detail-val loading" id="dLocation">—</span></div>
+    <div class="detail-row"><span class="detail-key">Region</span><span class="detail-val loading" id="dRegion">—</span></div>
+    <div class="detail-row"><span class="detail-key">Country</span><span class="detail-val loading" id="dCountry">—</span></div>
+    <div class="detail-row"><span class="detail-key">Timezone</span><span class="detail-val loading" id="dTimezone">—</span></div>
+    <div class="detail-row"><span class="detail-key">Coordinates</span><span class="detail-val loading" id="dCoords">—</span></div>
+  </div>
+
+  <!-- Browser / request info -->
+  <div class="browser-card">
+    <div class="detail-header">Browser & request</div>
+    <div class="detail-row"><span class="detail-key">User agent</span><span class="detail-val" id="dUA" style="font-size:11px;">—</span></div>
+    <div class="detail-row"><span class="detail-key">Language</span><span class="detail-val" id="dLang">—</span></div>
+    <div class="detail-row"><span class="detail-key">Platform</span><span class="detail-val" id="dPlatform">—</span></div>
+    <div class="detail-row"><span class="detail-key">Screen</span><span class="detail-val" id="dScreen">—</span></div>
+    <div class="detail-row"><span class="detail-key">Connection</span><span class="detail-val" id="dConnection">—</span></div>
+  </div>
+
+  <!-- Whitelist callout -->
+  <div class="callout">
+    <div class="callout-title">Need access?</div>
+    <div class="callout-text">
+      Share your <strong>public IP</strong> and <strong>ISP / ASN</strong> with your network admin to get whitelisted.
+      If you're connecting through <strong>Prisma Access or a corporate VPN</strong>, your IP may already be in the allowlist — check the org listed above.
+    </div>
+  </div>
 
 </div>
 <script>
-  const facts = [
-    "Matt Damon left Harvard 12 credits short of graduating to film Good Will Hunting. Harvard eventually gave him an honorary degree, which he accepted looking extremely smug and deservedly so.",
-    "He sold the Good Will Hunting screenplay for $675,000. Ben Affleck used his half to buy a leather jacket. Matt Damon used his to become Matt Damon.",
-    "Damon turned down Avatar. He would have earned roughly $250 million. He once said it was 'probably a mistake.' Probably.",
-    "He lost 60 pounds for Courage Under Fire by barely eating. His adrenal gland never forgave him. Neither did his personal trainer.",
-    "Matt Damon has been rescued in more films than any other A-list actor — Saving Private Ryan, The Martian, Interstellar, Elysium. Hollywood keeps putting him in danger just to get him out of it.",
-    "He and Ben Affleck have been best friends since age 8. They grew up two blocks apart in Cambridge, met on a baseball diamond, and have been insufferably close ever since.",
-    "Jason Bourne was originally described as a 'grizzled, older spy.' Damon got the role after Doug Liman saw him in Talented Mr. Ripley and thought he had the face of someone who could kill you and apologize about it.",
-    "He gained 30 pounds for The Informant! by eating cheese and drinking beer. He has described this as the most enjoyable research he has ever done.",
-    "Damon trained with Navy SEALs for Green Zone. The SEALs reportedly found this delightful.",
-    "He starred in The Martian, a film about a man left alone on Mars who survives by farming potatoes. Matt Damon has since refused to confirm or deny whether he knows how to grow potatoes in real life.",
-    "His cameo in Eurotrip — where he plays a punk rock singer — is so brief and so unhinged that most viewers assume they imagined it. They did not.",
-    "Damon co-founded water.org, which has brought clean water access to over 40 million people. He also once got roasted on 30 Rock for 14 seasons. The man contains multitudes.",
-    "Forbes ranked him the most bankable star in Hollywood, meaning studios make more money per dollar spent on Matt Damon than anyone else. He is, financially speaking, a reliable appliance.",
-    "He replaced Tom Hanks in Saving Private Ryan after Hanks dropped out for Cast Away. Tom Hanks was then replaced in Cast Away by a volleyball named Wilson. Everyone came out fine.",
-    "Matt Damon has an IQ reported to be around 160. He used this to write Good Will Hunting, turn down Avatar, and spend 30 years being best friends with Ben Affleck. Make of that what you will.",
-    "He once described his preparation for playing a CIA operative as 'mostly just looking concerned in nice coats.' Critics agreed this was very convincing.",
-    "His daughter once told an interviewer that her dad is 'just a guy who watches a lot of TV.' This is the most humanizing thing ever said about Matt Damon.",
-    "Damon has appeared on screen with George Clooney so many times that film historians now track it as a recurring natural phenomenon, like solar flares.",
-  ];
+  let resolvedIP = '';
 
-  document.getElementById('factText').textContent = facts[Math.floor(Math.random() * facts.length)];
+  // Browser info (no API needed)
+  document.getElementById('dUA').textContent       = navigator.userAgent;
+  document.getElementById('dLang').textContent     = navigator.language || '—';
+  document.getElementById('dPlatform').textContent = navigator.platform || navigator.userAgentData?.platform || '—';
+  document.getElementById('dScreen').textContent   = screen.width + ' × ' + screen.height + ' @ ' + (window.devicePixelRatio || 1) + 'x';
+
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  document.getElementById('dConnection').textContent = conn
+    ? [(conn.effectiveType || ''), (conn.downlink ? conn.downlink + ' Mbps' : ''), (conn.rtt ? conn.rtt + 'ms RTT' : '')].filter(Boolean).join(' · ')
+    : '—';
+
+  // IP + geo via ipinfo.io
+  fetch('https://ipinfo.io/json')
+    .then(r => r.json())
+    .then(d => {
+      resolvedIP = d.ip || '';
+
+      const ipEl = document.getElementById('ipValue');
+      ipEl.textContent = resolvedIP;
+      ipEl.classList.remove('loading');
+
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        el.textContent = val || '—';
+        el.classList.remove('loading');
+      };
+
+      // org format: "AS12345 Palo Alto Networks"
+      const orgRaw  = d.org || '';
+      const asnMatch = orgRaw.match(/^(AS\d+)\s(.+)$/);
+      set('dOrg',      asnMatch ? asnMatch[2] : orgRaw);
+      set('dAsn',      asnMatch ? asnMatch[1] : '—');
+      set('dHostname', d.hostname || '—');
+      set('dLocation', [d.city, d.postal].filter(Boolean).join(', '));
+      set('dRegion',   d.region);
+      set('dCountry',  d.country);
+      set('dTimezone', d.timezone);
+      set('dCoords',   d.loc || '—');
+    })
+    .catch(() => {
+      document.getElementById('ipValue').textContent = 'Could not resolve';
+      document.getElementById('ipValue').classList.remove('loading');
+      ['dOrg','dAsn','dHostname','dLocation','dRegion','dCountry','dTimezone','dCoords']
+        .forEach(id => { document.getElementById(id).textContent = 'Unavailable'; document.getElementById(id).classList.remove('loading'); });
+    });
+
+  function copyIP() {
+    if (!resolvedIP) return;
+    navigator.clipboard.writeText(resolvedIP).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy IP'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
 </script>
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "REPLACE_WITH_YOUR_TOKEN"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
