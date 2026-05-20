@@ -40,7 +40,7 @@ export async function onRequestPost(context) {
     });
     const tsData = await tsRes.json();
     if (!tsData.success) {
-      return Response.json({ error: 'Bot check failed. Please try again.', _debug: { ...tsData, secretLen: (env.TURNSTILE_SECRET || '').length } }, { status: 403 });
+      return Response.json({ error: 'Bot check failed. Please try again.', _debug: { ...tsData, secretLen: (env.TURNSTILE_SECRET || '').length, envKeys: Object.keys(env) } }, { status: 403 });
     }
 
     // Rate limit — one pending OTP per email at a time
