@@ -39,12 +39,18 @@
     /* Access callout — only shown when ?access=1 */
     .callout{background:rgba(46,107,230,.08);border:1px solid rgba(46,107,230,.2);border-radius:16px;padding:20px 22px;margin-bottom:12px;animation:fadeUp .5s .24s ease both;display:none;}
     .callout.visible{display:block;}
-    .callout-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue-light);margin-bottom:8px;}
-    .callout-text{font-size:13px;color:var(--smoke);line-height:1.6;margin-bottom:16px;}
-    .callout-text strong{color:var(--cream);}
-    .request-btn{display:inline-block;padding:13px 32px;background:var(--blue);color:#fff;text-decoration:none;border-radius:10px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;transition:opacity .2s;cursor:pointer;}
+    .callout-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue-light);margin-bottom:16px;}
+
+    /* Form fields */
+    .form-group{margin-bottom:12px;}
+    .form-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--smoke);display:block;margin-bottom:6px;}
+    .form-input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--cream);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s;}
+    .form-input:focus{border-color:var(--blue);}
+    .form-input::placeholder{color:var(--ash);}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+    .request-btn{display:inline-block;margin-top:16px;width:100%;text-align:center;padding:13px 32px;background:var(--blue);color:#fff;text-decoration:none;border-radius:10px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;transition:opacity .2s;cursor:pointer;}
     .request-btn:hover{opacity:.85;}
-    .request-btn.ready{background:var(--blue);}
     .request-btn.not-ready{background:rgba(255,255,255,.1);color:var(--ash);cursor:default;pointer-events:none;}
 
     /* Info callout — shown when accessed directly (no ?access=1) */
@@ -97,14 +103,35 @@
   <!-- Access request callout (blocked users only) -->
   <div class="callout" id="accessCallout">
     <div class="callout-title">Request access</div>
-    <div class="callout-text"></div>
-    <a class="request-btn not-ready" id="requestBtn" href="#">Preparing email…</a>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="fName">Full name</label>
+        <input class="form-input" id="fName" type="text" placeholder="Jane Smith" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fPhone">Phone</label>
+        <input class="form-input" id="fPhone" type="tel" placeholder="+1 212 555 0100" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="fCompany">Company</label>
+      <input class="form-input" id="fCompany" type="text" placeholder="Acme Corp" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="fReason">What do you need access to?</label>
+      <input class="form-input" id="fReason" type="text" placeholder="e.g. Pizza ordering dashboard" />
+    </div>
+
+    <a class="request-btn not-ready" id="requestBtn" href="#">Preparing…</a>
   </div>
 
   <!-- Generic info callout (direct visitors) -->
   <div class="info-callout" id="infoCallout">
     <div class="detail-header">Need access to a restricted resource?</div>
-    <div style="font-size:13px;color:var(--smoke);line-height:1.6;">
+    <div style="font-size:13px;color:var(--smoke);line-height:1.6;margin-top:4px;">
       Share your <strong style="color:var(--cream)">public IP</strong> and <strong style="color:var(--cream)">ISP / ASN</strong> with your network admin to get whitelisted.
     </div>
   </div>
@@ -115,11 +142,9 @@
   let resolvedIP = '';
   let networkData = {};
 
-  // Adjust header for blocked users
   if (isAccessRequest) {
     document.getElementById('headerIcon').textContent = '🔒';
     document.getElementById('headerTitle').innerHTML = 'Access <em>Restricted</em>';
-    document.getElementById('headerSub').textContent = '';
     document.getElementById('accessCallout').classList.add('visible');
     document.getElementById('infoCallout').classList.add('hidden');
   }
@@ -134,6 +159,56 @@
   document.getElementById('dConnection').textContent = conn
     ? [(conn.effectiveType || ''), (conn.downlink ? conn.downlink + ' Mbps' : ''), (conn.rtt ? conn.rtt + 'ms RTT' : '')].filter(Boolean).join(' · ')
     : '—';
+
+  function buildMailto() {
+    const name    = document.getElementById('fName').value.trim();
+    const phone   = document.getElementById('fPhone').value.trim();
+    const company = document.getElementById('fCompany').value.trim();
+    const reason  = document.getElementById('fReason').value.trim();
+    const d       = networkData;
+    const orgRaw  = d.org || '';
+    const asnMatch = orgRaw.match(/^(AS\d+)\s(.+)$/);
+    const org     = asnMatch ? asnMatch[2] : orgRaw;
+    const asn     = asnMatch ? asnMatch[1] : '—';
+    const loc     = [d.city, d.region, d.country].filter(Boolean).join(', ');
+    const scr     = screen.width + 'x' + screen.height + ' @' + (window.devicePixelRatio || 1) + 'x';
+
+    const body = [
+      '--- Requester ---',
+      'Name:    ' + (name    || '(not provided)'),
+      'Phone:   ' + (phone   || '(not provided)'),
+      'Company: ' + (company || '(not provided)'),
+      'Reason:  ' + (reason  || '(not provided)'),
+      '',
+      '--- Network ---',
+      'IP:          ' + (resolvedIP || '—'),
+      'ISP:         ' + org,
+      'ASN:         ' + asn,
+      'Hostname:    ' + (d.hostname || '—'),
+      'Location:    ' + loc,
+      'Postal:      ' + (d.postal   || '—'),
+      'Timezone:    ' + (d.timezone || '—'),
+      'Coordinates: ' + (d.loc      || '—'),
+      '',
+      '--- Browser ---',
+      'User Agent: ' + navigator.userAgent,
+      'Platform:   ' + (navigator.platform || '—'),
+      'Language:   ' + (navigator.language || '—'),
+      'Screen:     ' + scr,
+    ].join('\n');
+
+    return 'mailto:patelv26@gmail.com'
+      + '?subject=' + encodeURIComponent('Access Request — pizza.vasantpatel.xyz')
+      + '&body='    + encodeURIComponent(body);
+  }
+
+  // Update mailto on every keystroke so it's always current
+  ['fName','fPhone','fCompany','fReason'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      const btn = document.getElementById('requestBtn');
+      if (btn.classList.contains('ready')) btn.href = buildMailto();
+    });
+  });
 
   // IP + geo
   fetch('https://ipinfo.io/json')
@@ -154,11 +229,8 @@
 
       const orgRaw   = d.org || '';
       const asnMatch = orgRaw.match(/^(AS\d+)\s(.+)$/);
-      const org      = asnMatch ? asnMatch[2] : orgRaw;
-      const asn      = asnMatch ? asnMatch[1] : '—';
-
-      set('dOrg',      org);
-      set('dAsn',      asn);
+      set('dOrg',      asnMatch ? asnMatch[2] : orgRaw);
+      set('dAsn',      asnMatch ? asnMatch[1] : '—');
       set('dHostname', d.hostname || '—');
       set('dLocation', [d.city, d.postal].filter(Boolean).join(', '));
       set('dRegion',   d.region);
@@ -166,32 +238,9 @@
       set('dTimezone', d.timezone);
       set('dCoords',   d.loc || '—');
 
-      // Build pre-filled mailto with all info
       if (isAccessRequest) {
-        const ua  = navigator.userAgent;
-        const scr = screen.width + 'x' + screen.height + ' @' + (window.devicePixelRatio||1) + 'x';
-        const loc = [d.city, d.region, d.country].filter(Boolean).join(', ');
-
-        const body = [
-          'IP: ' + resolvedIP,
-          'ISP: ' + org,
-          'ASN: ' + asn,
-          'Hostname: ' + (d.hostname || '—'),
-          'Location: ' + loc,
-          'Postal: ' + (d.postal || '—'),
-          'Timezone: ' + (d.timezone || '—'),
-          'Coordinates: ' + (d.loc || '—'),
-          '',
-          'User Agent: ' + ua,
-          'Platform: ' + (navigator.platform || '—'),
-          'Language: ' + (navigator.language || '—'),
-          'Screen: ' + scr,
-        ].join('\n');
-
         const btn = document.getElementById('requestBtn');
-        btn.href = 'mailto:vpatel@nhl.com'
-          + '?subject=' + encodeURIComponent('Access Request — pizza.vasantpatel.xyz')
-          + '&body=' + encodeURIComponent(body);
+        btn.href = buildMailto();
         btn.textContent = 'Request Access';
         btn.classList.remove('not-ready');
         btn.classList.add('ready');
@@ -207,7 +256,7 @@
         });
       if (isAccessRequest) {
         const btn = document.getElementById('requestBtn');
-        btn.href = 'mailto:vpatel@nhl.com?subject=' + encodeURIComponent('Access Request — pizza.vasantpatel.xyz');
+        btn.href = buildMailto();
         btn.textContent = 'Request Access';
         btn.classList.remove('not-ready');
         btn.classList.add('ready');
