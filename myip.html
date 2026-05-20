@@ -146,11 +146,6 @@
         <label class="form-label" for="fEmail">Work email *</label>
         <input class="form-input" id="fEmail" type="email" placeholder="jane@acmecorp.com" />
       </div>
-      <div class="form-group">
-        <label class="form-label" for="fReason">What do you need access to? *</label>
-        <input class="form-input" id="fReason" type="text" placeholder="e.g. Pizza ordering dashboard" />
-      </div>
-
       <!-- Turnstile widget -->
       <div class="cf-turnstile" data-sitekey="0x4AAAAAADSsj4XF3IQzPPay" data-theme="dark"></div>
 
@@ -197,9 +192,6 @@
     document.getElementById('headerTitle').innerHTML = 'Access <em>Restricted</em>';
     document.getElementById('accessCallout').classList.add('visible');
     document.getElementById('infoCallout').classList.add('hidden');
-    if (fromURL) {
-      document.getElementById('fReason').value = fromURL;
-    }
   }
 
   // Browser info
@@ -264,10 +256,10 @@
     const phone   = document.getElementById('fPhone').value.trim();
     const company = document.getElementById('fCompany').value.trim();
     const email   = document.getElementById('fEmail').value.trim();
-    const reason  = document.getElementById('fReason').value.trim();
+    const reason  = '';
     const tsToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
 
-    if (!name || !company || !email || !reason) {
+    if (!name || !company || !email) {
       showError('formError', 'Please fill in all required fields.');
       return;
     }
