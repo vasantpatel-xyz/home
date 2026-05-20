@@ -74,11 +74,11 @@ export async function onRequestPost(context) {
       body: JSON.stringify({
         from: 'Access Request <noreply@vasantpatel.xyz>',
         to: [email],
-        subject: 'Your verification code',
+        subject: 'Your support verification code',
         html: `
           <div style="font-family:sans-serif;max-width:400px;margin:0 auto;padding:32px 24px;">
             <h2 style="margin:0 0 8px">Verify your email</h2>
-            <p style="color:#666;margin:0 0 24px">Enter this code to complete your access request:</p>
+            <p style="color:#666;margin:0 0 24px">Enter this code to complete your support request:</p>
             <div style="font-size:36px;font-weight:700;letter-spacing:8px;color:#2e6be6;margin-bottom:24px">${otp}</div>
             <p style="color:#999;font-size:13px">This code expires in 10 minutes. If you didn't request access, ignore this email.</p>
           </div>

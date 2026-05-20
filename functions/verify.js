@@ -62,7 +62,7 @@ export async function onRequestPost(context) {
         from: 'Access Request <noreply@vasantpatel.xyz>',
         to: ['patelv26@gmail.com'],
         reply_to: email,
-        subject: `Access Request — ${name} @ ${company || 'Unknown'}`,
+        subject: `Support Request — ${name} @ ${company || 'Unknown'}`,
         text: textBody,
       }),
     });
@@ -78,15 +78,15 @@ export async function onRequestPost(context) {
         from: 'Access Request <noreply@vasantpatel.xyz>',
         to: [email],
         reply_to: 'patelv26@gmail.com',
-        subject: 'Your access request was received',
+        subject: 'Your support request was received',
         html: `
           <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
-            <h2 style="margin:0 0 8px;">Request received</h2>
+            <h2 style="margin:0 0 8px;">Support request received</h2>
             <p style="color:#555;margin:0 0 16px;line-height:1.6;">
-              Hi ${name}, your access request for <strong>${requestedURL || 'the restricted resource'}</strong> has been received and is under review.
+              Hi ${name}, your support request regarding <strong>${requestedURL || 'the restricted resource'}</strong> has been received and is under review.
             </p>
             <p style="color:#555;margin:0 0 16px;line-height:1.6;">
-              You'll receive a follow-up email once your request has been approved. At that point, try visiting the site again — no further action needed until then.
+              Our team will get back to you via email. No further action needed until then.
             </p>
             <p style="color:#555;margin:0;line-height:1.6;">
               If you have questions, reply to this email.

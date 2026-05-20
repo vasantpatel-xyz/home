@@ -98,7 +98,7 @@
 
   <!-- Form -->
   <div class="callout">
-    <div class="callout-title">Request access</div>
+    <div class="callout-title">Contact support</div>
 
     <!-- Step 1: Form -->
     <div id="formStep">
@@ -122,7 +122,7 @@
       </div>
       <div class="cf-turnstile" data-sitekey="0x4AAAAAADSsj4XF3IQzPPay" data-theme="dark"></div>
       <div class="error-msg" id="formError"></div>
-      <button class="submit-btn" id="submitBtn" onclick="submitForm()">Send Verification Code</button>
+      <button class="submit-btn" id="submitBtn" onclick="submitForm()">Contact Support</button>
     </div>
 
     <!-- Step 2: OTP -->
@@ -138,11 +138,11 @@
     <!-- Step 3: Success -->
     <div class="success-step" id="successStep">
       <span class="success-icon">✅</span>
-      <div class="success-title">Request sent</div>
+      <div class="success-title">Support ticket sent</div>
       <p class="success-text">
         A confirmation has been sent to your email.<br><br>
         <strong style="color:var(--cream)">What happens next:</strong><br>
-        Once your request is approved you'll receive an email — then try visiting the site again. No further action needed until then.
+        Our team will review your request and get back to you via email. No further action needed until then.
       </p>
     </div>
   </div>
@@ -179,6 +179,7 @@
         document.getElementById('prismaWarning').classList.add('visible');
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('submitBtn').textContent = 'Connect to Prisma Browser first';
+        document.getElementById('submitBtn').disabled = true;
         renderInstructions();
       }
     })
