@@ -24,15 +24,16 @@ export async function onRequestPost(context) {
     await env.OTP_STORE.delete(`otp:${email}`);
 
     // Build access request email to admin
-    const { name, phone, company, reason, networkInfo: n = {} } = data;
+    const { name, phone, company, reason, requestedURL, networkInfo: n = {} } = data;
 
     const textBody = [
       '--- Requester ---',
-      `Name:    ${name}`,
-      `Phone:   ${phone    || '—'}`,
-      `Company: ${company  || '—'}`,
-      `Email:   ${email}`,
-      `Reason:  ${reason   || '—'}`,
+      `Name:        ${name}`,
+      `Phone:       ${phone        || '—'}`,
+      `Company:     ${company      || '—'}`,
+      `Email:       ${email}`,
+      `Reason:      ${reason       || '—'}`,
+      `Requested URL: ${requestedURL || '—'}`,
       '',
       '--- Network ---',
       `IP:          ${n.ip       || '—'}`,

@@ -3,7 +3,7 @@ export async function onRequestPost(context) {
 
   try {
     const body = await request.json();
-    const { name, phone, company, reason, email, turnstileToken, networkInfo } = body;
+    const { name, phone, company, reason, email, requestedURL, turnstileToken, networkInfo } = body;
 
     // Validate required fields
     if (!name || !email || !turnstileToken) {
@@ -48,7 +48,7 @@ export async function onRequestPost(context) {
     // Store in KV — expires in 10 minutes
     await env.OTP_STORE.put(
       `otp:${email}`,
-      JSON.stringify({ otp, name, phone, company, reason, email, networkInfo }),
+      JSON.stringify({ otp, name, phone, company, reason, email, requestedURL, networkInfo }),
       { expirationTtl: 600 }
     );
 

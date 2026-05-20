@@ -186,7 +186,9 @@
 
 </div>
 <script>
-  const isAccessRequest = new URLSearchParams(window.location.search).has('access');
+  const params = new URLSearchParams(window.location.search);
+  const isAccessRequest = params.has('access');
+  const fromURL = params.get('from') || '';
   let resolvedIP = '';
   let networkData = {};
 
@@ -195,6 +197,9 @@
     document.getElementById('headerTitle').innerHTML = 'Access <em>Restricted</em>';
     document.getElementById('accessCallout').classList.add('visible');
     document.getElementById('infoCallout').classList.add('hidden');
+    if (fromURL) {
+      document.getElementById('fReason').value = fromURL;
+    }
   }
 
   // Browser info
@@ -283,6 +288,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name, phone, company, email, reason,
+        requestedURL: fromURL,
         turnstileToken: tsToken,
         networkInfo: {
           ip:       resolvedIP,
