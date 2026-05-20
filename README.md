@@ -5,7 +5,7 @@
 `pizza.vasantpatel.xyz` is protected by a Cloudflare WAF managed via Terraform (`cloudflare-prisma-waf`). Only Prisma Browser egress IPs and previously verified users are allowed through. Everyone else is blocked and redirected to a support contact flow that collects their identity and network info before forwarding to the admin.
 
 For WAF architecture, Terraform module structure, and IP list details see:
-`~/nhl/networking/development/cloudflare-prisma-waf/README.md`
+`~/networking/cloudflare-prisma-waf/README.md`
 
 ---
 
