@@ -61,7 +61,7 @@
   <div class="header">
     <span class="logo-mark" id="headerIcon">🔍</span>
     <h1 id="headerTitle">Your <em>Network</em><br>Info</h1>
-    <p class="subtitle" id="headerSub">For access &amp; whitelisting</p>
+    <p class="subtitle" id="headerSub"></p>
   </div>
 
   <!-- IP Hero -->
@@ -123,7 +123,7 @@
   if (isAccessRequest) {
     document.getElementById('headerIcon').textContent = '🔒';
     document.getElementById('headerTitle').innerHTML = 'Access <em>Restricted</em>';
-    document.getElementById('headerSub').textContent = 'Your network info — for whitelisting';
+    document.getElementById('headerSub').textContent = '';
     document.getElementById('accessCallout').classList.add('visible');
     document.getElementById('infoCallout').classList.add('hidden');
   }
