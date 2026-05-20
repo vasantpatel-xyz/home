@@ -2,7 +2,7 @@
 
 ## Overview
 
-`pizza.vasantpatel.xyz` is protected by a Cloudflare WAF managed via Terraform (`cloudflare-prisma-waf`). Only Prisma Browser egress IPs and previously verified users are allowed through. Everyone else is blocked and redirected to an access request flow that validates their identity before forwarding the request to the admin.
+`pizza.vasantpatel.xyz` is protected by a Cloudflare WAF managed via Terraform (`cloudflare-prisma-waf`). Only Prisma Browser egress IPs and previously verified users are allowed through. Everyone else is blocked and redirected to a support contact flow that collects their identity and network info before forwarding to the admin.
 
 For WAF architecture, Terraform module structure, and IP list details see:
 `~/nhl/networking/development/cloudflare-prisma-waf/README.md`
@@ -16,7 +16,7 @@ For WAF architecture, Terraform module structure, and IP list details see:
 | Skip | Allow | IP in `$prisma_egress_ips` **or** `vasant_verified` cookie present |
 | Block | 403 + redirect | Everything else scoped to `pizza.vasantpatel.xyz` |
 
-The block response is a tiny redirect page — no content served from CF directly. Users are sent to `vasantpatel.xyz/myip?access=1&from=<original URL>` where the full access request flow lives.
+The block response is a tiny redirect page — no content served from CF directly. Users are sent to `vasantpatel.xyz/myip?access=1&from=<original URL>` where the support flow lives.
 
 ---
 
@@ -24,20 +24,22 @@ The block response is a tiny redirect page — no content served from CF directl
 
 | Component | What it does |
 |---|---|
-| WAF block + redirect | Non-Prisma traffic is blocked and sent to the access request page with the original URL |
+| WAF block + redirect | Non-Prisma traffic is blocked and sent to the support page with the original URL |
 | Prisma Browser check | Client-side org check + server-side IP validation against 204 known Prisma egress IPs |
-| Access request form | Collects name, phone, company, work email |
+| Prisma setup instructions | Device-specific steps shown (Mac, Windows, iPhone/iPad, Android) if not on Prisma |
+| Support form | Collects name, phone, company, work email |
 | Turnstile | Proves the submitter is human (no bots) |
 | Corporate email check | Rejects Gmail, Yahoo, Hotmail, Outlook, etc. |
 | OTP verification | Sends a 6-digit code to the work email — confirms they own it |
-| Confirmation email | Requester receives an email with next steps immediately after OTP verification |
-| Admin email | Full request details sent to `patelv26@gmail.com` with reply-to set to requester |
+| Silent network capture | IP, ISP, ASN, hostname, location, browser info collected in background — included in admin email only |
+| Confirmation email | User receives email with next steps immediately after OTP verification |
+| Admin email | Full details sent to `patelv26@gmail.com` with reply-to set to user |
 | Verified cookie | Sets a 30-day cookie so verified users skip the flow on return visits |
 | WAF cookie bypass | Verified users reach `pizza.vasantpatel.xyz` directly on return |
 
 ---
 
-## Test 1 — Access Request Form (no VPN needed)
+## Test 1 — Support Form (no VPN needed)
 
 Visit the form directly:
 
@@ -47,10 +49,10 @@ https://vasantpatel.xyz/myip?access=1
 
 **Expected:**
 - Page loads in "Access Restricted" mode (🔒 header)
-- Your IP, ISP, ASN, hostname, location, and browser info resolve automatically
-- If not on Prisma Browser: red warning banner appears, submit button locked
+- If not on Prisma Browser: red warning banner appears with device-specific setup instructions, submit button locked
 - If on Prisma Browser: form is active — Full name, Phone, Company, Work email
 - Turnstile widget appears at the bottom
+- Network info is collected silently in the background (not displayed)
 
 ---
 
@@ -60,7 +62,8 @@ https://vasantpatel.xyz/myip?access=1
 Load the form from a non-Prisma network (home internet, hotspot).
 
 **Expected:**
-- Warning banner: *"You don't appear to be on Prisma Browser — connect first, then try again"*
+- Warning banner: *"Your connection doesn't appear to be coming through Prisma Browser"*
+- Device-specific setup instructions shown (auto-detected: Mac / Windows / iPhone / Android)
 - Submit button disabled: *"Connect to Prisma Browser first"*
 - Even if the UI is bypassed, `/submit` rejects with `not_prisma` server-side
 
@@ -95,16 +98,12 @@ Retry with a valid work email (e.g. `yourname@yourcompany.com`).
 Enter the 6-digit code from the email.
 
 **Expected:**
-- Success screen appears:
+- Success screen: *"Support ticket sent"*
   - *"A confirmation has been sent to your email."*
-  - *"Once your request is approved you'll receive an email — then try visiting the site again."*
-- **Requester receives** a confirmation email: request received, wait for approval email
-- **Admin receives** email at `patelv26@gmail.com` with:
-  - Name, phone, company, email
-  - Requested URL (captured from the original blocked page)
-  - Full network info (IP, ISP, ASN, hostname, location, timezone, coordinates)
-  - Browser info (user agent, platform, language, screen)
-  - Reply-to set to requester's email — just hit reply to respond
+  - *"Our team will review your request and get back to you via email."*
+- **User receives** confirmation email: support request received, team will follow up
+- **Admin receives** email at `patelv26@gmail.com` with all details (see format below)
+  - Reply-to set to user's email — just hit reply to respond
 - `vasant_verified` cookie is set in the browser (30 days, all of `vasantpatel.xyz`)
 
 To inspect the cookie:
@@ -124,7 +123,7 @@ DevTools → Application → Cookies → vasantpatel.xyz → vasant_verified
 **Expected:**
 - Cloudflare WAF blocks the request
 - Browser immediately redirects to `https://vasantpatel.xyz/myip?access=1&from=https://pizza.vasantpatel.xyz/`
-- Full access request page loads with original URL captured
+- Support page loads with original URL captured silently
 
 ---
 
@@ -164,7 +163,7 @@ Submit the form twice with the same email within 10 minutes.
 ## Admin Email Format
 
 ```
-Subject: Access Request — Jane Smith @ Acme Corp
+Subject: Support Request — Jane Smith @ Acme Corp
 
 --- Requester ---
 Name:          Jane Smith
@@ -190,22 +189,21 @@ Language:   en-US
 Screen:     1680x1050 @2x
 ```
 
-Reply-to is set to the requester's email — hit reply to approve and notify them.
+Reply-to is set to the user's email — hit reply to follow up.
 
 ---
 
-## Requester Confirmation Email
+## User Confirmation Email
 
 Sent immediately after OTP verification:
 
 ```
-Subject: Your access request was received
+Subject: Your support request was received
 
-Hi Jane, your access request for https://pizza.vasantpatel.xyz/ has been
+Hi Jane, your support request regarding https://pizza.vasantpatel.xyz/ has been
 received and is under review.
 
-You'll receive a follow-up email once your request has been approved.
-At that point, try visiting the site again — no further action needed until then.
+Our team will get back to you via email. No further action needed until then.
 
 If you have questions, reply to this email.
 ```
@@ -217,7 +215,7 @@ If you have questions, reply to this email.
 | URL | Purpose |
 |---|---|
 | `https://pizza.vasantpatel.xyz` | Protected site — blocked without Prisma IP or verified cookie |
-| `https://vasantpatel.xyz/myip?access=1` | Access request form (direct link for demo) |
+| `https://vasantpatel.xyz/myip?access=1` | Support form (direct link for demo) |
 | `https://vasantpatel.xyz` | Public splash page (Matt Damon facts) |
 
 ---
