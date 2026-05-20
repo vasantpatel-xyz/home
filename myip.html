@@ -36,6 +36,13 @@
 
     .browser-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 28px;margin-bottom:12px;animation:fadeUp .5s .18s ease both;}
 
+    /* Prisma warning */
+    .prisma-warning{background:rgba(232,90,90,.08);border:1px solid rgba(232,90,90,.25);border-radius:16px;padding:18px 22px;margin-bottom:12px;animation:fadeUp .5s .24s ease both;display:none;}
+    .prisma-warning.visible{display:block;}
+    .prisma-warning-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#e05a5a;margin-bottom:8px;}
+    .prisma-warning-text{font-size:13px;color:var(--smoke);line-height:1.6;}
+    .prisma-warning-text strong{color:var(--cream);}
+
     /* Request form card */
     .callout{background:rgba(46,107,230,.08);border:1px solid rgba(46,107,230,.2);border-radius:16px;padding:20px 22px;margin-bottom:12px;animation:fadeUp .5s .24s ease both;display:none;}
     .callout.visible{display:block;}
@@ -120,6 +127,15 @@
     <div class="detail-row"><span class="detail-key">Platform</span><span class="detail-val" id="dPlatform">—</span></div>
     <div class="detail-row"><span class="detail-key">Screen</span><span class="detail-val" id="dScreen">—</span></div>
     <div class="detail-row"><span class="detail-key">Connection</span><span class="detail-val" id="dConnection">—</span></div>
+  </div>
+
+  <!-- Prisma warning (access mode only) -->
+  <div class="prisma-warning" id="prismaWarning">
+    <div class="prisma-warning-title">⚠️ Not on Prisma Browser</div>
+    <div class="prisma-warning-text">
+      Your connection doesn't appear to be coming through <strong>Prisma Browser</strong>.
+      Connect to Prisma and try again — requests submitted without it will be rejected.
+    </div>
   </div>
 
   <!-- Access request callout (blocked users only) -->
@@ -223,8 +239,19 @@
 
       const orgRaw   = d.org || '';
       const asnMatch = orgRaw.match(/^(AS\d+)\s(.+)$/);
-      set('dOrg',      asnMatch ? asnMatch[2] : orgRaw);
+      const orgName  = asnMatch ? asnMatch[2] : orgRaw;
+      set('dOrg',      orgName);
       set('dAsn',      asnMatch ? asnMatch[1] : '—');
+
+      // Client-side Prisma check — Palo Alto Networks owns all Prisma egress IPs
+      if (isAccessRequest) {
+        const isPrisma = /palo alto/i.test(orgName);
+        if (!isPrisma) {
+          document.getElementById('prismaWarning').classList.add('visible');
+          document.getElementById('submitBtn').disabled = true;
+          document.getElementById('submitBtn').textContent = 'Connect to Prisma Browser first';
+        }
+      }
       set('dHostname', d.hostname || '—');
       set('dLocation', [d.city, d.postal].filter(Boolean).join(', '));
       set('dRegion',   d.region);
@@ -304,9 +331,15 @@
     const data = await res.json();
 
     if (!res.ok) {
-      showError('formError', data.error || 'Something went wrong. Try again.');
-      btn.disabled = false;
-      btn.textContent = 'Send Verification Code';
+      if (data.error === 'not_prisma') {
+        document.getElementById('prismaWarning').classList.add('visible');
+        btn.disabled = true;
+        btn.textContent = 'Connect to Prisma Browser first';
+      } else {
+        showError('formError', data.message || data.error || 'Something went wrong. Try again.');
+        btn.disabled = false;
+        btn.textContent = 'Send Verification Code';
+      }
       return;
     }
 
