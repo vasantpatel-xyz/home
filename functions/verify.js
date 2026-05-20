@@ -101,24 +101,7 @@ export async function onRequestPost(context) {
       }),
     });
 
-    // Set verified cookie — valid for 30 days across all subdomains
-    const cookie = [
-      `vasant_verified=${env.VERIFIED_COOKIE_SECRET}`,
-      'Domain=vasantpatel.xyz',
-      'Path=/',
-      'Max-Age=2592000',
-      'HttpOnly',
-      'Secure',
-      'SameSite=Lax',
-    ].join('; ');
-
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Set-Cookie': cookie,
-      },
-    });
+    return Response.json({ success: true });
   } catch (e) {
     return Response.json({ error: 'Server error. Please try again.' }, { status: 500 });
   }

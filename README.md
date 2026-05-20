@@ -33,7 +33,7 @@ For WAF architecture, Terraform module structure, and IP list details see:
 
 | Rule | Type | Expression |
 |---|---|---|
-| Skip | Allow | IP in `$prisma_egress_ips` **or** `vasant_verified` cookie present |
+| Skip | Allow | IP in `$prisma_egress_ips` only |
 | Block | 403 + redirect | Everything else scoped to `pizza.vasantpatel.xyz` |
 
 The block response is a tiny redirect page — no content served from CF directly. Users are sent to `vasantpatel.xyz/myip?access=1&from=<original URL>` where the support flow lives.
@@ -54,8 +54,7 @@ The block response is a tiny redirect page — no content served from CF directl
 | Silent network capture | IP, ISP, ASN, hostname, location, browser info collected in background — included in admin email only |
 | Confirmation email | User receives email with next steps immediately after OTP verification |
 | Admin email | Full details sent to `patelv26@gmail.com` with reply-to set to user |
-| Verified cookie | Sets a 30-day cookie so verified users skip the flow on return visits |
-| WAF cookie bypass | Verified users reach `pizza.vasantpatel.xyz` directly on return |
+| IP whitelist | Admin adds approved IPs to `whitelist.json` + `terraform apply` — only way to get permanent access |
 
 ---
 
@@ -125,12 +124,6 @@ Enter the 6-digit code from the email.
 - **User receives** confirmation email: support request received, team will follow up
 - **Admin receives** email at `patelv26@gmail.com` with all details (see format below)
   - Reply-to set to user's email — just hit reply to respond
-- `vasant_verified` cookie is set in the browser (30 days, all of `vasantpatel.xyz`)
-
-To inspect the cookie:
-```
-DevTools → Application → Cookies → vasantpatel.xyz → vasant_verified
-```
 
 ---
 
@@ -148,22 +141,7 @@ DevTools → Application → Cookies → vasantpatel.xyz → vasant_verified
 
 ---
 
-## Test 6 — Verified Cookie Bypass
-
-After completing Test 4 (OTP verified, cookie set):
-
-1. Visit `https://pizza.vasantpatel.xyz` from the same browser
-2. The `vasant_verified` cookie is present
-
-**Expected:**
-- WAF skip rule matches the cookie
-- No redirect, no block — direct access to the site
-
-To test revocation: clear cookies in DevTools and revisit. You should be blocked and redirected again.
-
----
-
-## Test 7 — OTP Expiry
+## Test 6 — OTP Expiry
 
 Start a request, wait 10+ minutes, then try to enter the OTP.
 
@@ -172,7 +150,7 @@ Start a request, wait 10+ minutes, then try to enter the OTP.
 
 ---
 
-## Test 8 — Duplicate Submission Rate Limit
+## Test 7 — Duplicate Submission Rate Limit
 
 Submit the form twice with the same email within 10 minutes.
 
