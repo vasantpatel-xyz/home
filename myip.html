@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Network Info — Access Request</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root{--cream:#f5f0e8;--warm-dark:#0d0d0f;--blue:#2e6be6;--blue-light:#5b8ff9;--green:#4caf82;--ash:#7a7a8a;--smoke:#b0afc0;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--warm-dark);color:var(--cream);min-height:100vh;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 60% at 15% 20%,rgba(46,107,230,.10) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 85% 80%,rgba(76,175,130,.06) 0%,transparent 60%);pointer-events:none;z-index:0;}
+    .page{position:relative;z-index:1;max-width:600px;margin:0 auto;padding:48px 20px 80px;}
+
+    .header{text-align:center;margin-bottom:40px;animation:fadeUp .5s ease both;}
+    .logo-mark{font-size:36px;display:block;margin-bottom:12px;}
+    h1{font-family:'Playfair Display',serif;font-size:clamp(28px,7vw,42px);font-weight:900;letter-spacing:-.02em;line-height:.95;color:var(--cream);}
+    h1 em{font-style:normal;color:var(--blue-light);}
+    .subtitle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);margin-top:10px;}
+
+    .ip-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 28px;margin-bottom:12px;text-align:center;animation:fadeUp .5s .06s ease both;}
+    .ip-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:16px;}
+    .ip-value{font-family:'DM Mono',monospace;font-size:clamp(28px,7vw,42px);font-weight:500;color:var(--blue-light);letter-spacing:.04em;word-break:break-all;}
+    .ip-value.loading{color:var(--ash);font-size:18px;animation:pulse 1.5s ease infinite;}
+    .copy-btn{margin-top:20px;padding:10px 24px;background:transparent;border:1.5px solid var(--border);border-radius:100px;color:var(--smoke);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+    .copy-btn:hover{border-color:var(--blue);color:var(--blue-light);}
+    .copy-btn.copied{border-color:var(--green);color:var(--green);}
+
+    .detail-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 28px;margin-bottom:12px;animation:fadeUp .5s .12s ease both;}
+    .detail-header{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:16px;}
+    .detail-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+    .detail-row:last-child{border-bottom:none;}
+    .detail-key{font-family:'DM Mono',monospace;font-size:12px;color:var(--smoke);flex-shrink:0;margin-right:16px;}
+    .detail-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--cream);text-align:right;word-break:break-all;}
+    .detail-val.loading{color:var(--ash);animation:pulse 1.5s ease infinite;}
+
+    .browser-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 28px;margin-bottom:12px;animation:fadeUp .5s .18s ease both;}
+
+    /* Access callout — only shown when ?access=1 */
+    .callout{background:rgba(46,107,230,.08);border:1px solid rgba(46,107,230,.2);border-radius:16px;padding:20px 22px;margin-bottom:12px;animation:fadeUp .5s .24s ease both;display:none;}
+    .callout.visible{display:block;}
+    .callout-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue-light);margin-bottom:8px;}
+    .callout-text{font-size:13px;color:var(--smoke);line-height:1.6;margin-bottom:16px;}
+    .callout-text strong{color:var(--cream);}
+    .request-btn{display:inline-block;padding:13px 32px;background:var(--blue);color:#fff;text-decoration:none;border-radius:10px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;transition:opacity .2s;cursor:pointer;}
+    .request-btn:hover{opacity:.85;}
+    .request-btn.ready{background:var(--blue);}
+    .request-btn.not-ready{background:rgba(255,255,255,.1);color:var(--ash);cursor:default;pointer-events:none;}
+
+    /* Info callout — shown when accessed directly (no ?access=1) */
+    .info-callout{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 22px;margin-bottom:12px;animation:fadeUp .5s .24s ease both;}
+    .info-callout.hidden{display:none;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <span class="logo-mark" id="headerIcon">🔍</span>
+    <h1 id="headerTitle">Your <em>Network</em><br>Info</h1>
+    <p class="subtitle" id="headerSub">For access &amp; whitelisting</p>
+  </div>
+
+  <!-- IP Hero -->
+  <div class="ip-card">
+    <div class="ip-label">Your public IP address</div>
+    <div class="ip-value loading" id="ipValue">Resolving…</div>
+    <button class="copy-btn" id="copyBtn" onclick="copyIP()">Copy IP</button>
+  </div>
+
+  <!-- Network detail -->
+  <div class="detail-card">
+    <div class="detail-header">Network details</div>
+    <div class="detail-row"><span class="detail-key">ISP / Org</span><span class="detail-val loading" id="dOrg">—</span></div>
+    <div class="detail-row"><span class="detail-key">ASN</span><span class="detail-val loading" id="dAsn">—</span></div>
+    <div class="detail-row"><span class="detail-key">Hostname</span><span class="detail-val loading" id="dHostname">—</span></div>
+    <div class="detail-row"><span class="detail-key">Location</span><span class="detail-val loading" id="dLocation">—</span></div>
+    <div class="detail-row"><span class="detail-key">Region</span><span class="detail-val loading" id="dRegion">—</span></div>
+    <div class="detail-row"><span class="detail-key">Country</span><span class="detail-val loading" id="dCountry">—</span></div>
+    <div class="detail-row"><span class="detail-key">Timezone</span><span class="detail-val loading" id="dTimezone">—</span></div>
+    <div class="detail-row"><span class="detail-key">Coordinates</span><span class="detail-val loading" id="dCoords">—</span></div>
+  </div>
+
+  <!-- Browser / request info -->
+  <div class="browser-card">
+    <div class="detail-header">Browser &amp; request</div>
+    <div class="detail-row"><span class="detail-key">User agent</span><span class="detail-val" id="dUA" style="font-size:11px;">—</span></div>
+    <div class="detail-row"><span class="detail-key">Language</span><span class="detail-val" id="dLang">—</span></div>
+    <div class="detail-row"><span class="detail-key">Platform</span><span class="detail-val" id="dPlatform">—</span></div>
+    <div class="detail-row"><span class="detail-key">Screen</span><span class="detail-val" id="dScreen">—</span></div>
+    <div class="detail-row"><span class="detail-key">Connection</span><span class="detail-val" id="dConnection">—</span></div>
+  </div>
+
+  <!-- Access request callout (blocked users only) -->
+  <div class="callout" id="accessCallout">
+    <div class="callout-title">Request access</div>
+    <div class="callout-text">
+      Your IP is not on the allowlist for <strong>pizza.vasantpatel.xyz</strong>.
+      Click below — all your network info will be pre-filled in the email. Just hit send.
+      <br><br>
+      If you're on <strong>Prisma Access or a corporate VPN</strong>, your egress IP may already be covered — check the org listed above.
+    </div>
+    <a class="request-btn not-ready" id="requestBtn" href="#">Preparing email…</a>
+  </div>
+
+  <!-- Generic info callout (direct visitors) -->
+  <div class="info-callout" id="infoCallout">
+    <div class="detail-header">Need access to a restricted resource?</div>
+    <div style="font-size:13px;color:var(--smoke);line-height:1.6;">
+      Share your <strong style="color:var(--cream)">public IP</strong> and <strong style="color:var(--cream)">ISP / ASN</strong> with your network admin to get whitelisted.
+      If you're connecting through <strong style="color:var(--cream)">Prisma Access or a corporate VPN</strong>, your IP may already be in the allowlist — check the org listed above.
+    </div>
+  </div>
+
+</div>
+<script>
+  const isAccessRequest = new URLSearchParams(window.location.search).has('access');
+  let resolvedIP = '';
+  let networkData = {};
+
+  // Adjust header for blocked users
+  if (isAccessRequest) {
+    document.getElementById('headerIcon').textContent = '🔒';
+    document.getElementById('headerTitle').innerHTML = 'Access <em>Restricted</em>';
+    document.getElementById('headerSub').textContent = 'Your network info — for whitelisting';
+    document.getElementById('accessCallout').classList.add('visible');
+    document.getElementById('infoCallout').classList.add('hidden');
+  }
+
+  // Browser info
+  document.getElementById('dUA').textContent       = navigator.userAgent;
+  document.getElementById('dLang').textContent     = navigator.language || '—';
+  document.getElementById('dPlatform').textContent = navigator.platform || navigator.userAgentData?.platform || '—';
+  document.getElementById('dScreen').textContent   = screen.width + ' × ' + screen.height + ' @ ' + (window.devicePixelRatio || 1) + 'x';
+
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  document.getElementById('dConnection').textContent = conn
+    ? [(conn.effectiveType || ''), (conn.downlink ? conn.downlink + ' Mbps' : ''), (conn.rtt ? conn.rtt + 'ms RTT' : '')].filter(Boolean).join(' · ')
+    : '—';
+
+  // IP + geo
+  fetch('https://ipinfo.io/json')
+    .then(r => r.json())
+    .then(d => {
+      resolvedIP = d.ip || '';
+      networkData = d;
+
+      const ipEl = document.getElementById('ipValue');
+      ipEl.textContent = resolvedIP;
+      ipEl.classList.remove('loading');
+
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        el.textContent = val || '—';
+        el.classList.remove('loading');
+      };
+
+      const orgRaw   = d.org || '';
+      const asnMatch = orgRaw.match(/^(AS\d+)\s(.+)$/);
+      const org      = asnMatch ? asnMatch[2] : orgRaw;
+      const asn      = asnMatch ? asnMatch[1] : '—';
+
+      set('dOrg',      org);
+      set('dAsn',      asn);
+      set('dHostname', d.hostname || '—');
+      set('dLocation', [d.city, d.postal].filter(Boolean).join(', '));
+      set('dRegion',   d.region);
+      set('dCountry',  d.country);
+      set('dTimezone', d.timezone);
+      set('dCoords',   d.loc || '—');
+
+      // Build pre-filled mailto with all info
+      if (isAccessRequest) {
+        const ua  = navigator.userAgent;
+        const scr = screen.width + 'x' + screen.height + ' @' + (window.devicePixelRatio||1) + 'x';
+        const loc = [d.city, d.region, d.country].filter(Boolean).join(', ');
+
+        const body = [
+          'IP: ' + resolvedIP,
+          'ISP: ' + org,
+          'ASN: ' + asn,
+          'Hostname: ' + (d.hostname || '—'),
+          'Location: ' + loc,
+          'Postal: ' + (d.postal || '—'),
+          'Timezone: ' + (d.timezone || '—'),
+          'Coordinates: ' + (d.loc || '—'),
+          '',
+          'User Agent: ' + ua,
+          'Platform: ' + (navigator.platform || '—'),
+          'Language: ' + (navigator.language || '—'),
+          'Screen: ' + scr,
+        ].join('\n');
+
+        const btn = document.getElementById('requestBtn');
+        btn.href = 'mailto:vpatel@nhl.com'
+          + '?subject=' + encodeURIComponent('Access Request — pizza.vasantpatel.xyz')
+          + '&body=' + encodeURIComponent(body);
+        btn.textContent = 'Request Access';
+        btn.classList.remove('not-ready');
+        btn.classList.add('ready');
+      }
+    })
+    .catch(() => {
+      document.getElementById('ipValue').textContent = 'Could not resolve';
+      document.getElementById('ipValue').classList.remove('loading');
+      ['dOrg','dAsn','dHostname','dLocation','dRegion','dCountry','dTimezone','dCoords']
+        .forEach(id => {
+          document.getElementById(id).textContent = 'Unavailable';
+          document.getElementById(id).classList.remove('loading');
+        });
+      if (isAccessRequest) {
+        const btn = document.getElementById('requestBtn');
+        btn.href = 'mailto:vpatel@nhl.com?subject=' + encodeURIComponent('Access Request — pizza.vasantpatel.xyz');
+        btn.textContent = 'Request Access';
+        btn.classList.remove('not-ready');
+        btn.classList.add('ready');
+      }
+    });
+
+  function copyIP() {
+    if (!resolvedIP) return;
+    navigator.clipboard.writeText(resolvedIP).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy IP'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
