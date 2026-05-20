@@ -62,6 +62,18 @@
 
     .cf-turnstile{margin-top:14px;}
 
+    /* Prisma instructions */
+    .instructions{margin-top:4px;}
+    .instructions-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#e05a5a;margin-bottom:8px;}
+    .instructions ol{padding-left:18px;margin:0;}
+    .instructions li{font-size:13px;color:var(--smoke);line-height:1.8;}
+    .instructions li strong{color:var(--cream);}
+    .instructions a{color:var(--blue-light);text-decoration:none;}
+    .instructions a:hover{text-decoration:underline;}
+    .device-tabs{display:flex;gap:8px;margin-bottom:12px;}
+    .device-tab{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:100px;border:1px solid rgba(255,255,255,.1);color:var(--ash);cursor:pointer;background:none;transition:all .2s;}
+    .device-tab.active{border-color:#e05a5a;color:#e05a5a;}
+
     @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   </style>
@@ -77,10 +89,11 @@
   <!-- Prisma warning -->
   <div class="prisma-warning" id="prismaWarning">
     <div class="prisma-warning-title">⚠️ Not on Prisma Browser</div>
-    <div class="prisma-warning-text">
+    <div class="prisma-warning-text" style="margin-bottom:14px;">
       Your connection doesn't appear to be coming through <strong>Prisma Browser</strong>.
       Connect to Prisma and try again — requests submitted without it will be rejected.
     </div>
+    <div id="prismaInstructions"></div>
   </div>
 
   <!-- Form -->
@@ -166,9 +179,68 @@
         document.getElementById('prismaWarning').classList.add('visible');
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('submitBtn').textContent = 'Connect to Prisma Browser first';
+        renderInstructions();
       }
     })
     .catch(() => {});
+
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const isIOS    = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isMac    = /Macintosh|MacIntel/i.test(navigator.userAgent) && !isMobile;
+  const isWin    = /Windows/i.test(navigator.userAgent);
+
+  const STEPS = {
+    mac: [
+      'Open <strong>Self Service</strong> or your company software portal',
+      'Search for <strong>Prisma Access Browser</strong> and install it',
+      'Launch <strong>Prisma Access Browser</strong> from your Applications folder',
+      'Sign in with your <strong>corporate credentials</strong>',
+      'Once connected, revisit this page in Prisma Access Browser',
+    ],
+    windows: [
+      'Open <strong>Company Portal</strong> or your IT software center',
+      'Search for <strong>Prisma Access Browser</strong> and install it',
+      'Launch <strong>Prisma Access Browser</strong> from the Start menu',
+      'Sign in with your <strong>corporate credentials</strong>',
+      'Once connected, revisit this page in Prisma Access Browser',
+    ],
+    ios: [
+      'Open the <strong>App Store</strong> on your iPhone or iPad',
+      'Search for <strong>"GlobalProtect"</strong> by Palo Alto Networks and install it',
+      'Open <strong>GlobalProtect</strong> and enter your corporate portal address',
+      'Sign in with your <strong>corporate credentials</strong>',
+      'Once connected, revisit this page',
+    ],
+    android: [
+      'Open the <strong>Play Store</strong> on your Android device',
+      'Search for <strong>"GlobalProtect"</strong> by Palo Alto Networks and install it',
+      'Open <strong>GlobalProtect</strong> and enter your corporate portal address',
+      'Sign in with your <strong>corporate credentials</strong>',
+      'Once connected, revisit this page',
+    ],
+  };
+
+  function renderInstructions(platform) {
+    const detected = platform || (isIOS ? 'ios' : isMobile ? 'android' : isMac ? 'mac' : 'windows');
+    const steps = STEPS[detected];
+    const tabs = [
+      { key: 'mac',     label: 'Mac' },
+      { key: 'windows', label: 'Windows' },
+      { key: 'ios',     label: 'iPhone / iPad' },
+      { key: 'android', label: 'Android' },
+    ];
+
+    document.getElementById('prismaInstructions').innerHTML = `
+      <div class="instructions">
+        <div class="instructions-label">How to connect</div>
+        <div class="device-tabs">
+          ${tabs.map(t => `<button class="device-tab ${t.key === detected ? 'active' : ''}" onclick="renderInstructions('${t.key}')">${t.label}</button>`).join('')}
+        </div>
+        <ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>
+        <p style="font-size:12px;color:var(--ash);margin-top:10px;">Not sure? Contact your IT helpdesk for the corporate portal address.</p>
+      </div>
+    `;
+  }
 
   function showError(id, msg) {
     const el = document.getElementById(id);
