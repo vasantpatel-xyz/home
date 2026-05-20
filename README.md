@@ -64,15 +64,16 @@ Load the form from a non-Prisma network (home internet, hotspot).
 **Expected:**
 - Warning banner: *"Your connection doesn't appear to be coming through Prisma Browser"*
 - Device-specific setup instructions shown (auto-detected: Mac / Windows / iPhone / Android)
-- Submit button disabled: *"Connect to Prisma Browser first"*
-- Even if the UI is bypassed, `/submit` rejects with `not_prisma` server-side
+- Form is still submittable — user can request support even without Prisma
+- Admin email will show: `On Prisma: No — submitted without Prisma Browser`
 
 ### On Prisma
 Load the form while connected to Prisma Browser.
 
 **Expected:**
 - No warning banner
-- Form is fully active and submittable
+- Form is fully active
+- Admin email will show: `On Prisma: Yes ✓`
 
 ---
 
@@ -171,6 +172,7 @@ Phone:         +1 212 555 0100
 Company:       Acme Corp
 Email:         jane@acmecorp.com
 Requested URL: https://pizza.vasantpatel.xyz/
+On Prisma:     Yes ✓  (or "No — submitted without Prisma Browser")
 
 --- Network ---
 IP:          203.0.113.45
