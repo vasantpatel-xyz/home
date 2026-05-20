@@ -67,6 +67,39 @@ export async function onRequestPost(context) {
       }),
     });
 
+    // Confirmation email to requester
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Access Request <noreply@vasantpatel.xyz>',
+        to: [email],
+        reply_to: 'patelv26@gmail.com',
+        subject: 'Your access request was received',
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
+            <h2 style="margin:0 0 8px;">Request received</h2>
+            <p style="color:#555;margin:0 0 16px;line-height:1.6;">
+              Hi ${name}, your access request for <strong>${requestedURL || 'the restricted resource'}</strong> has been received and is under review.
+            </p>
+            <p style="color:#555;margin:0 0 16px;line-height:1.6;">
+              You'll receive a follow-up email once your request has been approved. At that point, try visiting the site again — no further action needed until then.
+            </p>
+            <p style="color:#555;margin:0;line-height:1.6;">
+              If you have questions, reply to this email.
+            </p>
+            <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
+            <p style="color:#999;font-size:12px;margin:0;">
+              Request submitted from: ${n.ip || '—'} · ${[n.city, n.country].filter(Boolean).join(', ') || '—'}
+            </p>
+          </div>
+        `,
+      }),
+    });
+
     // Set verified cookie — valid for 30 days across all subdomains
     const cookie = [
       `vasant_verified=${env.VERIFIED_COOKIE_SECRET}`,
