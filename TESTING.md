@@ -2,7 +2,21 @@
 
 ## Overview
 
-`pizza.vasantpatel.xyz` is protected by a Cloudflare WAF. Only Prisma Browser egress IPs and previously verified users are allowed through. Everyone else is blocked and redirected to an access request flow that validates their identity before forwarding the request to the admin.
+`pizza.vasantpatel.xyz` is protected by a Cloudflare WAF managed via Terraform (`cloudflare-prisma-waf`). Only Prisma Browser egress IPs and previously verified users are allowed through. Everyone else is blocked and redirected to an access request flow that validates their identity before forwarding the request to the admin.
+
+For WAF architecture, Terraform module structure, and IP list details see:
+`~/nhl/networking/development/cloudflare-prisma-waf/README.md`
+
+---
+
+## WAF Rule Summary
+
+| Rule | Type | Expression |
+|---|---|---|
+| Skip | Allow | IP in `$prisma_egress_ips` **or** `vasant_verified` cookie present |
+| Block | 403 + redirect | Everything else scoped to `pizza.vasantpatel.xyz` |
+
+The block response is a tiny redirect page — no content served from CF directly. Users are sent to `vasantpatel.xyz/myip?access=1&from=<original URL>` where the full access request flow lives.
 
 ---
 
