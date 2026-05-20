@@ -13,14 +13,9 @@ export async function onRequestPost(context) {
       return Response.json({ error: 'Missing required fields.' }, { status: 400 });
     }
 
-    // Server-side Prisma IP check — CF-Connecting-IP is the real client IP
+    // Server-side Prisma IP check — flag it in the email but don't block the form
     const clientIP = request.headers.get('CF-Connecting-IP') || '';
-    if (!PRISMA_IPS.has(clientIP)) {
-      return Response.json({
-        error: 'not_prisma',
-        message: 'You must be connected to Prisma Browser to request access.',
-      }, { status: 403 });
-    }
+    const onPrisma = PRISMA_IPS.has(clientIP);
 
     // Basic email sanity check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -60,7 +55,7 @@ export async function onRequestPost(context) {
     // Store in KV — expires in 10 minutes
     await env.OTP_STORE.put(
       `otp:${email}`,
-      JSON.stringify({ otp, name, phone, company, reason, email, requestedURL, networkInfo }),
+      JSON.stringify({ otp, name, phone, company, reason, email, requestedURL, networkInfo, onPrisma }),
       { expirationTtl: 600 }
     );
 

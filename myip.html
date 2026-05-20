@@ -91,7 +91,7 @@
     <div class="prisma-warning-title">⚠️ Not on Prisma Browser</div>
     <div class="prisma-warning-text" style="margin-bottom:14px;">
       Your connection doesn't appear to be coming through <strong>Prisma Browser</strong>.
-      Connect to Prisma and try again — requests submitted without it will be rejected.
+      If you can, connect to Prisma first — otherwise you can still submit a request and our team will follow up.
     </div>
     <div id="prismaInstructions"></div>
   </div>
@@ -173,13 +173,10 @@
       const asnMatch = orgRaw.match(/^(AS\d+)\s(.+)$/);
       const orgName  = asnMatch ? asnMatch[2] : orgRaw;
 
-      // Client-side Prisma check
+      // Client-side Prisma check — show warning + instructions but don't lock the form
       const isPrisma = /palo alto/i.test(orgName);
       if (!isPrisma) {
         document.getElementById('prismaWarning').classList.add('visible');
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('submitBtn').textContent = 'Connect to Prisma Browser first';
-        document.getElementById('submitBtn').disabled = true;
         renderInstructions();
       }
     })

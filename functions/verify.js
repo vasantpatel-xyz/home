@@ -24,7 +24,7 @@ export async function onRequestPost(context) {
     await env.OTP_STORE.delete(`otp:${email}`);
 
     // Build access request email to admin
-    const { name, phone, company, reason, requestedURL, networkInfo: n = {} } = data;
+    const { name, phone, company, reason, requestedURL, networkInfo: n = {}, onPrisma } = data;
 
     const textBody = [
       '--- Requester ---',
@@ -34,6 +34,7 @@ export async function onRequestPost(context) {
       `Email:       ${email}`,
       `Reason:      ${reason       || '—'}`,
       `Requested URL: ${requestedURL || '—'}`,
+      `On Prisma:   ${onPrisma ? 'Yes ✓' : 'No — submitted without Prisma Browser'}`,
       '',
       '--- Network ---',
       `IP:          ${n.ip       || '—'}`,
