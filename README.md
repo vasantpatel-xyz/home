@@ -9,6 +9,26 @@ For WAF architecture, Terraform module structure, and IP list details see:
 
 ---
 
+## CF Pages Setup
+
+### Environment Variables (Settings → Environment Variables → Add as Secret)
+
+| Variable | Value |
+|---|---|
+| `TURNSTILE_SECRET` | Cloudflare Turnstile secret key |
+| `RESEND_API_KEY` | Resend API key (`re_...`) |
+| `VERIFIED_COOKIE_SECRET` | Shared secret — must match `verified_cookie_secret` in `terraform.tfvars` |
+
+### Bindings (Settings → Bindings → KV Namespace)
+
+| Name | Namespace |
+|---|---|
+| `OTP_STORE` | `OTP_STORE` |
+
+> After adding or changing any variable, trigger a new deployment for it to take effect.
+
+---
+
 ## WAF Rule Summary
 
 | Rule | Type | Expression |
