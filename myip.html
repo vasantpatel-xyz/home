@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Network Info — Access Request</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
-    :root{--cream:#f5f0e8;--warm-dark:#0d0d0f;--blue:#2e6be6;--blue-light:#5b8ff9;--green:#4caf82;--ash:#7a7a8a;--smoke:#b0afc0;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);}
+    :root{--cream:#f5f0e8;--warm-dark:#0d0d0f;--blue:#2e6be6;--blue-light:#5b8ff9;--green:#4caf82;--red:#e05a5a;--ash:#7a7a8a;--smoke:#b0afc0;--card:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'DM Sans',sans-serif;background:var(--warm-dark);color:var(--cream);min-height:100vh;overflow-x:hidden;}
     body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 60% at 15% 20%,rgba(46,107,230,.10) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 85% 80%,rgba(76,175,130,.06) 0%,transparent 60%);pointer-events:none;z-index:0;}
@@ -16,7 +17,6 @@
     .logo-mark{font-size:36px;display:block;margin-bottom:12px;}
     h1{font-family:'Playfair Display',serif;font-size:clamp(28px,7vw,42px);font-weight:900;letter-spacing:-.02em;line-height:.95;color:var(--cream);}
     h1 em{font-style:normal;color:var(--blue-light);}
-    .subtitle{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--smoke);margin-top:10px;}
 
     .ip-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 28px;margin-bottom:12px;text-align:center;animation:fadeUp .5s .06s ease both;}
     .ip-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ash);margin-bottom:16px;}
@@ -36,26 +36,49 @@
 
     .browser-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 28px;margin-bottom:12px;animation:fadeUp .5s .18s ease both;}
 
-    /* Access callout — only shown when ?access=1 */
+    /* Request form card */
     .callout{background:rgba(46,107,230,.08);border:1px solid rgba(46,107,230,.2);border-radius:16px;padding:20px 22px;margin-bottom:12px;animation:fadeUp .5s .24s ease both;display:none;}
     .callout.visible{display:block;}
     .callout-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue-light);margin-bottom:16px;}
 
-    /* Form fields */
     .form-group{margin-bottom:12px;}
     .form-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--smoke);display:block;margin-bottom:6px;}
     .form-input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--cream);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s;}
     .form-input:focus{border-color:var(--blue);}
     .form-input::placeholder{color:var(--ash);}
+    .form-input.error{border-color:var(--red);}
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
-    .request-btn{display:inline-block;margin-top:16px;width:100%;text-align:center;padding:13px 32px;background:var(--blue);color:#fff;text-decoration:none;border-radius:10px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;transition:opacity .2s;cursor:pointer;}
-    .request-btn:hover{opacity:.85;}
-    .request-btn.not-ready{background:rgba(255,255,255,.1);color:var(--ash);cursor:default;pointer-events:none;}
+    .error-msg{font-family:'DM Mono',monospace;font-size:11px;color:var(--red);margin-top:10px;display:none;}
+    .error-msg.visible{display:block;}
 
-    /* Info callout — shown when accessed directly (no ?access=1) */
+    .submit-btn{display:block;margin-top:16px;width:100%;text-align:center;padding:13px 32px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:opacity .2s;}
+    .submit-btn:hover{opacity:.85;}
+    .submit-btn:disabled{background:rgba(255,255,255,.1);color:var(--ash);cursor:default;}
+
+    /* OTP step */
+    .otp-step{display:none;text-align:center;}
+    .otp-step.visible{display:block;}
+    .otp-hint{font-size:13px;color:var(--smoke);margin-bottom:16px;line-height:1.6;}
+    .otp-hint strong{color:var(--cream);}
+    .otp-input{width:180px;text-align:center;font-size:28px;letter-spacing:8px;padding:12px 16px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--cream);font-family:'DM Mono',monospace;outline:none;transition:border-color .2s;}
+    .otp-input:focus{border-color:var(--blue);}
+    .otp-resend{font-family:'DM Mono',monospace;font-size:11px;color:var(--ash);margin-top:12px;cursor:pointer;background:none;border:none;text-decoration:underline;}
+    .otp-resend:hover{color:var(--smoke);}
+
+    /* Success step */
+    .success-step{display:none;text-align:center;padding:8px 0;}
+    .success-step.visible{display:block;}
+    .success-icon{font-size:40px;display:block;margin-bottom:12px;}
+    .success-title{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px;}
+    .success-text{font-size:13px;color:var(--smoke);line-height:1.6;}
+
+    /* Info callout for direct visitors */
     .info-callout{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 22px;margin-bottom:12px;animation:fadeUp .5s .24s ease both;}
     .info-callout.hidden{display:none;}
+
+    /* Turnstile centering */
+    .cf-turnstile{margin-top:14px;}
 
     @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -67,7 +90,6 @@
   <div class="header">
     <span class="logo-mark" id="headerIcon">🔍</span>
     <h1 id="headerTitle">Your <em>Network</em><br>Info</h1>
-    <p class="subtitle" id="headerSub"></p>
   </div>
 
   <!-- IP Hero -->
@@ -104,28 +126,54 @@
   <div class="callout" id="accessCallout">
     <div class="callout-title">Request access</div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label" for="fName">Full name</label>
-        <input class="form-input" id="fName" type="text" placeholder="Jane Smith" />
+    <!-- Step 1: Form -->
+    <div id="formStep">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="fName">Full name *</label>
+          <input class="form-input" id="fName" type="text" placeholder="Jane Smith" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="fPhone">Phone</label>
+          <input class="form-input" id="fPhone" type="tel" placeholder="+1 212 555 0100" />
+        </div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="fPhone">Phone</label>
-        <input class="form-input" id="fPhone" type="tel" placeholder="+1 212 555 0100" />
+        <label class="form-label" for="fCompany">Company *</label>
+        <input class="form-input" id="fCompany" type="text" placeholder="Acme Corp" />
       </div>
+      <div class="form-group">
+        <label class="form-label" for="fEmail">Work email *</label>
+        <input class="form-input" id="fEmail" type="email" placeholder="jane@acmecorp.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="fReason">What do you need access to? *</label>
+        <input class="form-input" id="fReason" type="text" placeholder="e.g. Pizza ordering dashboard" />
+      </div>
+
+      <!-- Turnstile widget -->
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAADSsj4XF3IQzPPay" data-theme="dark"></div>
+
+      <div class="error-msg" id="formError"></div>
+      <button class="submit-btn" id="submitBtn" onclick="submitForm()">Send Verification Code</button>
     </div>
 
-    <div class="form-group">
-      <label class="form-label" for="fCompany">Company</label>
-      <input class="form-input" id="fCompany" type="text" placeholder="Acme Corp" />
+    <!-- Step 2: OTP -->
+    <div class="otp-step" id="otpStep">
+      <p class="otp-hint" id="otpHint">We sent a 6-digit code to <strong id="otpEmail"></strong>. Enter it below to submit your request.</p>
+      <input class="otp-input" id="otpInput" type="text" inputmode="numeric" maxlength="6" placeholder="000000" oninput="this.value=this.value.replace(/\D/g,''); if(this.value.length===6) verifyOtp()" />
+      <div class="error-msg" id="otpError"></div>
+      <button class="submit-btn" id="verifyBtn" style="max-width:200px;margin:16px auto 0" onclick="verifyOtp()">Verify</button>
+      <br>
+      <button class="otp-resend" onclick="resetForm()">Start over</button>
     </div>
 
-    <div class="form-group">
-      <label class="form-label" for="fReason">What do you need access to?</label>
-      <input class="form-input" id="fReason" type="text" placeholder="e.g. Pizza ordering dashboard" />
+    <!-- Step 3: Success -->
+    <div class="success-step" id="successStep">
+      <span class="success-icon">✅</span>
+      <div class="success-title">Request sent</div>
+      <p class="success-text">Your access request has been received. You'll hear back via email.</p>
     </div>
-
-    <a class="request-btn not-ready" id="requestBtn" href="#">Preparing…</a>
   </div>
 
   <!-- Generic info callout (direct visitors) -->
@@ -157,60 +205,9 @@
 
   const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   document.getElementById('dConnection').textContent = conn
-    ? [(conn.effectiveType || ''), (conn.downlink ? conn.downlink + ' Mbps' : ''), (conn.rtt ? conn.rtt + 'ms RTT' : '')].filter(Boolean).join(' · ')
+    ? [(conn.effectiveType||''), (conn.downlink ? conn.downlink+' Mbps' : ''), (conn.rtt ? conn.rtt+'ms RTT' : '')].filter(Boolean).join(' · ')
     : '—';
 
-  function buildMailto() {
-    const name    = document.getElementById('fName').value.trim();
-    const phone   = document.getElementById('fPhone').value.trim();
-    const company = document.getElementById('fCompany').value.trim();
-    const reason  = document.getElementById('fReason').value.trim();
-    const d       = networkData;
-    const orgRaw  = d.org || '';
-    const asnMatch = orgRaw.match(/^(AS\d+)\s(.+)$/);
-    const org     = asnMatch ? asnMatch[2] : orgRaw;
-    const asn     = asnMatch ? asnMatch[1] : '—';
-    const loc     = [d.city, d.region, d.country].filter(Boolean).join(', ');
-    const scr     = screen.width + 'x' + screen.height + ' @' + (window.devicePixelRatio || 1) + 'x';
-
-    const body = [
-      '--- Requester ---',
-      'Name:    ' + (name    || '(not provided)'),
-      'Phone:   ' + (phone   || '(not provided)'),
-      'Company: ' + (company || '(not provided)'),
-      'Reason:  ' + (reason  || '(not provided)'),
-      '',
-      '--- Network ---',
-      'IP:          ' + (resolvedIP || '—'),
-      'ISP:         ' + org,
-      'ASN:         ' + asn,
-      'Hostname:    ' + (d.hostname || '—'),
-      'Location:    ' + loc,
-      'Postal:      ' + (d.postal   || '—'),
-      'Timezone:    ' + (d.timezone || '—'),
-      'Coordinates: ' + (d.loc      || '—'),
-      '',
-      '--- Browser ---',
-      'User Agent: ' + navigator.userAgent,
-      'Platform:   ' + (navigator.platform || '—'),
-      'Language:   ' + (navigator.language || '—'),
-      'Screen:     ' + scr,
-    ].join('\n');
-
-    return 'mailto:patelv26@gmail.com'
-      + '?subject=' + encodeURIComponent('Access Request — pizza.vasantpatel.xyz')
-      + '&body='    + encodeURIComponent(body);
-  }
-
-  // Update mailto on every keystroke so it's always current
-  ['fName','fPhone','fCompany','fReason'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', () => {
-      const btn = document.getElementById('requestBtn');
-      if (btn.classList.contains('ready')) btn.href = buildMailto();
-    });
-  });
-
-  // IP + geo
   fetch('https://ipinfo.io/json')
     .then(r => r.json())
     .then(d => {
@@ -237,31 +234,137 @@
       set('dCountry',  d.country);
       set('dTimezone', d.timezone);
       set('dCoords',   d.loc || '—');
-
-      if (isAccessRequest) {
-        const btn = document.getElementById('requestBtn');
-        btn.href = buildMailto();
-        btn.textContent = 'Request Access';
-        btn.classList.remove('not-ready');
-        btn.classList.add('ready');
-      }
     })
     .catch(() => {
       document.getElementById('ipValue').textContent = 'Could not resolve';
       document.getElementById('ipValue').classList.remove('loading');
       ['dOrg','dAsn','dHostname','dLocation','dRegion','dCountry','dTimezone','dCoords']
-        .forEach(id => {
-          document.getElementById(id).textContent = 'Unavailable';
-          document.getElementById(id).classList.remove('loading');
-        });
-      if (isAccessRequest) {
-        const btn = document.getElementById('requestBtn');
-        btn.href = buildMailto();
-        btn.textContent = 'Request Access';
-        btn.classList.remove('not-ready');
-        btn.classList.add('ready');
-      }
+        .forEach(id => { document.getElementById(id).textContent = 'Unavailable'; document.getElementById(id).classList.remove('loading'); });
     });
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  function hideError(id) {
+    document.getElementById(id).classList.remove('visible');
+  }
+
+  async function submitForm() {
+    hideError('formError');
+
+    const name    = document.getElementById('fName').value.trim();
+    const phone   = document.getElementById('fPhone').value.trim();
+    const company = document.getElementById('fCompany').value.trim();
+    const email   = document.getElementById('fEmail').value.trim();
+    const reason  = document.getElementById('fReason').value.trim();
+    const tsToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
+
+    if (!name || !company || !email || !reason) {
+      showError('formError', 'Please fill in all required fields.');
+      return;
+    }
+    if (!tsToken) {
+      showError('formError', 'Please complete the security check.');
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    const orgRaw   = networkData.org || '';
+    const asnMatch = orgRaw.match(/^(AS\d+)\s(.+)$/);
+
+    const res = await fetch('/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name, phone, company, email, reason,
+        turnstileToken: tsToken,
+        networkInfo: {
+          ip:       resolvedIP,
+          isp:      asnMatch ? asnMatch[2] : orgRaw,
+          asn:      asnMatch ? asnMatch[1] : '—',
+          hostname: networkData.hostname || '—',
+          city:     networkData.city,
+          region:   networkData.region,
+          country:  networkData.country,
+          postal:   networkData.postal,
+          timezone: networkData.timezone,
+          loc:      networkData.loc,
+          ua:       navigator.userAgent,
+          platform: navigator.platform || '—',
+          language: navigator.language || '—',
+          screen:   screen.width + 'x' + screen.height + ' @' + (window.devicePixelRatio||1) + 'x',
+        },
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError('formError', data.error || 'Something went wrong. Try again.');
+      btn.disabled = false;
+      btn.textContent = 'Send Verification Code';
+      return;
+    }
+
+    // Show OTP step
+    document.getElementById('otpEmail').textContent = email;
+    document.getElementById('formStep').style.display = 'none';
+    document.getElementById('otpStep').classList.add('visible');
+    document.getElementById('otpInput').focus();
+  }
+
+  async function verifyOtp() {
+    hideError('otpError');
+
+    const email = document.getElementById('fEmail').value.trim();
+    const otp   = document.getElementById('otpInput').value.trim();
+
+    if (otp.length !== 6) {
+      showError('otpError', 'Enter the 6-digit code from your email.');
+      return;
+    }
+
+    const btn = document.getElementById('verifyBtn');
+    btn.disabled = true;
+    btn.textContent = 'Verifying…';
+
+    const res = await fetch('/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showError('otpError', data.error || 'Verification failed. Try again.');
+      btn.disabled = false;
+      btn.textContent = 'Verify';
+      return;
+    }
+
+    // Success
+    document.getElementById('otpStep').classList.remove('visible');
+    document.getElementById('successStep').classList.add('visible');
+  }
+
+  function resetForm() {
+    document.getElementById('formStep').style.display = '';
+    document.getElementById('otpStep').classList.remove('visible');
+    document.getElementById('otpInput').value = '';
+    hideError('otpError');
+    hideError('formError');
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = false;
+    btn.textContent = 'Send Verification Code';
+    if (window.turnstile) turnstile.reset();
+  }
 
   function copyIP() {
     if (!resolvedIP) return;
