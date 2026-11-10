@@ -1,8 +1,10 @@
 # Access Control — Testing & Validation Guide
 
+> **Status (2026-11-10): the WAF restriction on `pizza.vasantpatel.xyz` has been removed.** Both custom WAF rules (the Prisma-IP skip and the block-everything-else) were deleted from the zone, so the site is open to everyone again. The support form at `vasantpatel.xyz/myip?access=1` still exists but nothing redirects to it. The rules were originally created by Terraform (`cloudflare-prisma-waf`); remove them from that config too, or the next `terraform apply` will recreate them. The rest of this document describes the setup as it was while the restriction was active.
+
 ## Overview
 
-`pizza.vasantpatel.xyz` is protected by a Cloudflare WAF managed via Terraform (`cloudflare-prisma-waf`). Only Prisma Browser egress IPs and previously verified users are allowed through. Everyone else is blocked and redirected to a support contact flow that collects their identity and network info before forwarding to the admin.
+`pizza.vasantpatel.xyz` was protected by a Cloudflare WAF managed via Terraform (`cloudflare-prisma-waf`). Only Prisma Browser egress IPs and previously verified users were allowed through. Everyone else was blocked and redirected to a support contact flow that collects their identity and network info before forwarding to the admin.
 
 For WAF architecture, Terraform module structure, and IP list details see:
 `~/networking/cloudflare-prisma-waf/README.md`
