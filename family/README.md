@@ -24,7 +24,7 @@ phone ──HTTPS──▶ family.vasantpatel.xyz
                   ├─ /api/boards/<id>   GET → {version,state,updatedAt,updatedBy}
                   │                     PUT → saves if `version` matches, else 409 + current copy
                   ├─ /api/me            → {email}
-                  ├─ everything else    → static file from public/ (ASSETS binding)
+                  ├─ everything else    → static file from public/, bundled into the worker at deploy
                   └─ cron 12:00 UTC     → digest email of open move items (src/digest.js, via Resend)
                   ▼
                 KV namespace (binding KV), keys board:<id>
@@ -74,7 +74,7 @@ Network hosts the deploy touches: `api.cloudflare.com`, the npm registry,
 
 ## Adding a person's tool or a project page
 
-Everything static is a folder under `public/`. No build step.
+Everything static is a folder under `public/`. `deploy.sh` bundles it into the worker (`scripts/bundle-assets.mjs`), so there is no separate upload step; for local work run `npm run bundle` after editing pages.
 
 1. Create `public/<person>/<tool>/index.html` (copy any existing page for the head and the top bar).
 2. Link it from `public/<person>/index.html` in the "tools" card.

@@ -8,7 +8,7 @@ free tier at family scale, and the table says what would push it over.
 |---|---|---|---|---|
 | Workers (the site + API) | Workers Free | 100,000 requests/day, 10 ms CPU per request | A few hundred requests/day | Past 100k/day the Worker returns errors for the rest of the day rather than billing; the paid plan is $5/month for 10M requests. |
 | Workers KV (the lists) | Workers Free | 100,000 reads/day, 1,000 writes/day, 1 GB stored | Dozens of reads, a handful of writes per day. Saves are debounced so one tick = one write. | 1,000 writes/day, which would mean ~1,000 ticks or edits in a day. |
-| Static assets (public/) | Workers Free | Free, requests to assets are not counted against the Worker limit | — | Not at this size. |
+| Static pages (public/) | Workers Free | Bundled into the Worker, so each page view is one Worker request | A few hundred/day | Counted in the 100k/day above. |
 | Cron trigger (the digest) | Workers Free | Cron triggers included; a few per Worker | 1 run/day | Only via the Worker request/CPU limits. |
 | Custom domain `family.vasantpatel.xyz` | Your existing zone | Free | — | — |
 | Cloudflare Access (login) | Zero Trust Free | Up to 50 users, one-time PIN and social/Google logins included, 24h log retention | 5 people | The 51st user. Then $7/user/month for everyone. |

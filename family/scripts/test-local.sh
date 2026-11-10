@@ -3,4 +3,5 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 [ -x node_modules/.bin/wrangler ] || npm ci --no-audit --no-fund --silent
+node scripts/bundle-assets.mjs
 node scripts/test-local.mjs

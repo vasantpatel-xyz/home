@@ -4,7 +4,7 @@
 //   GET  /api/me                   { email }
 //   GET  /api/boards/<path>        { version, state, updatedAt, updatedBy }
 //   PUT  /api/boards/<path>        { version, state }   (version must match; 409 otherwise)
-//   *    everything else           static files from public/ (via the ASSETS binding)
+//   *    everything else           static files from public/, bundled into the worker at deploy time
 //   cron                           daily digest email of open move items (needs RESEND_API_KEY)
 //
 // Every request except /healthz must carry a valid Cloudflare Access JWT. The
@@ -15,6 +15,7 @@
 
 import moveSeed from '../seed/51-hartlander-move.json';
 import { buildDigest } from './digest.js';
+import STATIC from './assets.generated.js'; // built by scripts/bundle-assets.mjs
 
 const SEEDS = { '51-hartlander/move': moveSeed };
 const BOARD_ID = /^[a-z0-9-]+(\/[a-z0-9-]+)*$/;
@@ -39,19 +40,32 @@ export default {
     }
     if (url.pathname.startsWith('/api/')) return json({ error: 'not_found' }, 404);
 
-    // Static pages. Never cache them in the browser: the login can change.
-    const res = await env.ASSETS.fetch(request);
-    const h = new Headers(res.headers);
-    h.set('cache-control', 'no-store');
-    h.set('x-content-type-options', 'nosniff');
-    h.set('referrer-policy', 'no-referrer');
-    return new Response(res.body, { status: res.status, headers: h });
+    return serveStatic(request, url);
   },
 
   async scheduled(event, env, ctx) {
     ctx.waitUntil(sendDigest(env));
   },
 };
+
+// ---------- static pages ----------
+
+const STATIC_HEADERS = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
+
+function serveStatic(request, url) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return text('Method not allowed', 405, { Allow: 'GET, HEAD' });
+  let path = url.pathname;
+  if (path.endsWith('/')) path += 'index.html';
+  let asset = STATIC[path];
+  if (!asset && STATIC[url.pathname + '/index.html']) {
+    return Response.redirect(url.origin + url.pathname + '/' + url.search, 301); // /kaavi -> /kaavi/
+  }
+  let status = 200;
+  if (!asset) { asset = STATIC['/404.html']; status = 404; }
+  if (!asset) return text('Not found', 404);
+  const body = asset.bin ? b64urlToBytes(asset.b.replace(/\+/g, '-').replace(/\//g, '_')) : asset.b;
+  return new Response(request.method === 'HEAD' ? null : body, { status, headers: { 'content-type': asset.t, ...STATIC_HEADERS } });
+}
 
 // ---------- boards ----------
 

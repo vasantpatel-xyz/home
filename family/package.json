@@ -4,6 +4,8 @@
   "type": "module",
   "description": "family.vasantpatel.xyz — shared household site on Cloudflare Workers + KV, behind Cloudflare Access",
   "scripts": {
+    "bundle": "node scripts/bundle-assets.mjs",
+    "predev": "node scripts/bundle-assets.mjs",
     "dev": "wrangler dev --port 8787 --test-scheduled --var ALLOW_UNAUTHENTICATED:true",
     "deploy": "bash scripts/deploy.sh",
     "test": "bash scripts/test-local.sh"

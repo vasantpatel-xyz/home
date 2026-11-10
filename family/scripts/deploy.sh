@@ -13,6 +13,8 @@ if [ ! -x node_modules/.bin/wrangler ]; then
   npm ci --no-audit --no-fund --silent
 fi
 
+echo "Bundling pages…"
+node scripts/bundle-assets.mjs
 echo "Deploying worker…"
 npx wrangler deploy
 

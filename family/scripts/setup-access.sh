@@ -71,6 +71,7 @@ grep -q "ACCESS_AUD = \"$AUD\"" wrangler.toml || die "failed to write ACCESS_AUD
 echo "wrangler.toml updated (commit this change)."
 
 [ -x node_modules/.bin/wrangler ] || npm ci --no-audit --no-fund --silent
+node scripts/bundle-assets.mjs
 npx wrangler deploy
 
 echo

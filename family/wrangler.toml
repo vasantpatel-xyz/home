@@ -12,13 +12,9 @@ routes = [
   { pattern = "family.vasantpatel.xyz", custom_domain = true }
 ]
 
-# Static pages live in public/. run_worker_first makes every request pass through
-# the worker, so the login check applies to static pages too.
-[assets]
-directory = "./public"
-binding = "ASSETS"
-run_worker_first = true
-not_found_handling = "404-page"
+# Static pages live in public/ and are bundled into the worker by
+# scripts/bundle-assets.mjs at deploy time, so the login check covers them and
+# no separate asset upload is needed.
 
 [observability]
 enabled = true

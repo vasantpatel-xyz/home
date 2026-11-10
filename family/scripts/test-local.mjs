@@ -85,14 +85,14 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     check('unseeded board starts empty with a To do section', r.status === 200 && r.body.version === 0 && r.body.state.groups[0].id === 'todo' && r.body.state.title === null);
     check('boards are independent', (await api('/api/boards/kai/list')).body.state.groups[0].items.length === 0);
 
-    // static pages via ASSETS
+    // static pages bundled into the worker
     r = await fetch(BASE + '/');
     check('GET / serves the family home, no-store', r.status === 200 && (await r.text()).includes('Patel') && r.headers.get('cache-control') === 'no-store');
     for (const p of ['/kaavi/', '/kaveera/', '/kai/', '/ami/', '/51-hartlander/', '/51-hartlander/move/', '/kaavi/list/', '/assets/board.js']) {
       check(`GET ${p} -> 200`, (await fetch(BASE + p)).status === 200);
     }
     r = await fetch(BASE + '/kaavi');
-    check('/kaavi (no slash) resolves (redirect or page)', r.status === 200);
+    check('/kaavi (no slash) redirects to /kaavi/', r.status === 200 && r.url.endsWith('/kaavi/'));
     r = await fetch(BASE + '/does-not-exist/');
     check('unknown page -> 404 with custom page', r.status === 404 && (await r.text()).includes('Nothing here yet'));
 
