@@ -26,6 +26,16 @@
 @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
 .q{margin:12px 0 0;padding:12px 14px;border-left:4px solid var(--accent);background:var(--bg);border-radius:8px;font-size:14px}
 .q b{color:var(--accent)}
+.prompt{margin:10px 0 0;padding:14px;border-radius:12px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));border:1px dashed var(--accent)}
+.prompt .eyebrow{color:var(--accent);margin-bottom:6px}
+.prompt p{margin:0 0 8px;font-size:16px;font-weight:600;line-height:1.35}
+.prompt ol{margin:0;padding-left:20px;font-size:14px}
+.prompt ol li{margin:3px 0}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:10px 14px 14px;font-size:13px}
+.rules div{display:flex;gap:8px;align-items:flex-start}
+.rules span{flex:none}
+.step.parent{border-style:dashed}
+.step .box.small{font-size:16px}
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:12px 14px}
 .day{aspect-ratio:1;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:grid;place-content:center;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .day.read{background:var(--done);border-color:var(--done);color:#fff;font-size:16px}
@@ -62,8 +72,21 @@
   <section class="card mission">
     <h2 id="missionTitle">Today's mission</h2>
     <div class="steps" id="steps"></div>
-    <div class="win" id="win">🎉 Mission done! Go play. 🎮</div>
+    <div class="prompt" id="prompt"></div>
     <div class="q" id="question"></div>
+    <div class="win" id="win">🎉 Mission done! Go play. 🎮</div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div class="who"><span class="dot" style="background:var(--c6)"></span><h2>Neat writing checklist</h2></div><span class="tally">every answer</span></div>
+    <div class="rules">
+      <div><span>🔠</span>Capital letter to start, period to end</div>
+      <div><span>👆</span>Finger space between words</div>
+      <div><span>📏</span>Letters sit on the line, same size</div>
+      <div><span>💬</span>Quote goes in "quotation marks"</div>
+      <div><span>🧱</span>Full sentences, not one word</div>
+      <div><span>🔁</span>Messy? Cross out once, write it again</div>
+    </div>
   </section>
 
   <section class="card">
@@ -91,11 +114,21 @@
   var API = '/api/docs/kaavi/reading';
   var START = '2026-11-16'; // Monday, week 1
   var STEPS = [
-    ['📖','Read one page out loud','3 min · every word counts'],
-    ['🤫','Read the chapter quietly','12 min · 1 or 2 chapters'],
-    ['✂️','Chunk two tricky words','2 min · un / fold / ed'],
-    ['🗣️','Answer out loud','3 min · who, what, and what it shows']
+    ['📖','Read one page out loud','3 min · every word, every ending'],
+    ['🤫','Read the chapter quietly','10 min · 1 or 2 chapters'],
+    ['✂️','Write two tricky words in your notebook','2 min · split them: un / fold / ed'],
+    ['✍️','Write today\'s answer neatly','5 min · full sentences, with a quote'],
+    ['👀','Grown-up check: neat + has a quote','Mom or Dad ticks this one']
   ];
+  // Monday to Friday: each day works one comprehension skill; Friday is the write-up from the plan.
+  var PROMPTS = {
+    1: {skill:'Character trait', q:'What is the main character like today? Pick one word (brave, bossy, kind, careful…).', how:['Write: "___ is ___ because…"','Copy one sentence from the book that proves it, in quotation marks.']},
+    2: {skill:'Problem and action', q:'What problem did the characters face today, and what did they do about it?', how:['Write the problem in one sentence.','Write what they did and why in one or two sentences.']},
+    3: {skill:'Change', q:'How is a character changing from the start of the book until now?', how:['Write: "At first ___. Now ___."','Add one quote that shows the change.']},
+    4: {skill:'Lesson', q:'What lesson is the story teaching so far? What makes you think that?', how:['Write the lesson in one sentence.','Give one example from the book as evidence.']},
+    5: {skill:'Friday write-up', q:'One neat paragraph, same shape as class: trait + quote, how the character changed, the lesson.', how:['Underline each part of the question first.','5 to 7 sentences. Capital letters, periods, quotation marks around the quote.','This is the one Mom and Dad read on Friday night.']}
+  };
+  var WEEKEND = {skill:'Bonus', q:'No mission today. If you read anyway, tell someone the best part of the chapter.', how:[]};
   var BOOKS = [
     {k:'b1',t:'The Boxcar Children',w:'Nov 16 – Nov 27',c:'#c0392b',q:'What does each kid do to help the family survive? How do they feel about Grandfather at the start vs. the end?'},
     {k:'b2',t:'Surprise Island',w:'Nov 30 – Dec 11',c:'#1f8a8a',q:'How do the kids make the island feel like home? What do they learn about the new people they meet?'},
@@ -113,7 +146,8 @@
     return out;
   }
   var DAYS = weekdays(), today = ymd(new Date());
-  function dayDone(k){ var s=state.days[k]; return !!(s && s.length===4 && s.every(Boolean)); }
+  function dayDone(k){ var s=state.days[k]; return !!(s && s.length>=STEPS.length && s.every(Boolean)); }
+  function blank(){ return STEPS.map(function(){ return false; }); }
   function currentBook(){ var i = Math.max(0, Math.min(3, Math.floor(DAYS.indexOf(today)/10))); if(DAYS.indexOf(today)<0 && today>DAYS[39]) i=3; return BOOKS[i]; }
   function streaks(){
     var cur=0, best=0, run=0;
@@ -122,15 +156,17 @@
   }
 
   function render(){
-    var td = state.days[today] || [false,false,false,false];
+    var td = state.days[today] || blank();
     var inPlan = DAYS.indexOf(today) >= 0;
     document.getElementById('missionTitle').textContent = inPlan ? "Today's mission" : (today < START ? 'Mission starts Mon, Nov 16' : 'Weekend – bonus reading counts too');
     document.getElementById('steps').innerHTML = STEPS.map(function(s,i){
-      return '<div class="step'+(td[i]?' done':'')+'" data-i="'+i+'" role="checkbox" aria-checked="'+(!!td[i])+'" tabindex="0"><span class="box">'+(td[i]?'✓':s[0])+'</span><div><b>'+s[1]+'</b><small>'+s[2]+'</small></div></div>';
+      return '<div class="step'+(td[i]?' done':'')+(i===STEPS.length-1?' parent':'')+'" data-i="'+i+'" role="checkbox" aria-checked="'+(!!td[i])+'" tabindex="0"><span class="box">'+(td[i]?'✓':s[0])+'</span><div><b>'+s[1]+'</b><small>'+s[2]+'</small></div></div>';
     }).join('');
     document.getElementById('win').className = 'win' + (dayDone(today) ? ' show' : '');
-    var b = currentBook();
-    document.getElementById('question').innerHTML = '<b>Think about it:</b> ' + b.q;
+    var b = currentBook(), dow = new Date().getDay(), pr = PROMPTS[dow] || WEEKEND;
+    document.getElementById('prompt').innerHTML = '<div class="eyebrow">Today\'s writing · ' + pr.skill + '</div><p>' + pr.q + '</p>'
+      + (pr.how.length ? '<ol>' + pr.how.map(function(h){ return '<li>'+h+'</li>'; }).join('') + '</ol>' : '');
+    document.getElementById('question').innerHTML = '<b>Big question for ' + b.t + ':</b> ' + b.q;
     var done=0;
     document.getElementById('grid').innerHTML = DAYS.map(function(k){
       var d=parse(k), cls='day'; if(dayDone(k)){cls+=' read'; done++;} else if(k<today){cls+=' missed';} if(k===today) cls+=' today';
@@ -181,7 +217,7 @@
 
   document.addEventListener('click', function(e){
     var s=e.target.closest('.step');
-    if(s){ var i=+s.dataset.i, td=(state.days[today]||[false,false,false,false]).slice(); var was=dayDone(today); td[i]=!td[i]; state.days[today]=td; changed(); if(!was&&dayDone(today)) confetti(); return; }
+    if(s){ var i=+s.dataset.i, td=(state.days[today]||blank()).slice(); while(td.length<STEPS.length) td.push(false); var was=dayDone(today); td[i]=!td[i]; state.days[today]=td; changed(); if(!was&&dayDone(today)) confetti(); return; }
     var b=e.target.closest('.book');
     if(b){ var k=b.dataset.k; if(state.books[k]){ if(!confirm('Un-finish this book?')) return; delete state.books[k]; } else { state.books[k]=true; confetti(); } changed(); }
   });

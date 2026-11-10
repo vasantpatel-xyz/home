@@ -149,13 +149,14 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     // Kaavi's reading page: 4 steps, grid of 40 days, 4 books; tap steps -> saved -> survives reload
     await page.goto(BASE + '/kaavi/reading/');
     await page.waitForSelector('.step');
-    check('reading: 4 steps, 40 days, 4 books rendered', (await page.locator('.step').count()) === 4 && (await page.locator('.day').count()) === 40 && (await page.locator('.book').count()) === 4);
+    check('reading: 5 steps, 40 days, 4 books rendered', (await page.locator('.step').count()) === 5 && (await page.locator('.day').count()) === 40 && (await page.locator('.book').count()) === 4);
     check('reading: book 1 shows as finished from the API save', await page.locator('.book.done').count() === 1);
-    for (const i of [0, 1, 2, 3]) await page.locator('.step').nth(i).click();
+    for (const i of [0, 1, 2, 3, 4]) await page.locator('.step').nth(i).click();
     await page.waitForFunction(() => document.getElementById('status').textContent === 'Saved', null, { timeout: 10000 });
-    check('reading: all four steps -> mission done banner', await page.locator('#win.show').isVisible());
+    check('reading: all five steps -> mission done banner', await page.locator('#win.show').isVisible());
     await page.reload(); await page.waitForSelector('.step');
-    check('reading: today\'s steps survive reload', (await page.locator('.step.done').count()) === 4);
+    check('reading: today\'s steps survive reload', (await page.locator('.step.done').count()) === 5);
+    check('reading: writing prompt shown', (await page.locator('#prompt').textContent()).includes('writing'));
     r = await api('/api/docs/kaavi/reading');
     const todayKey = new Date().toLocaleDateString('en-CA');
     check('reading: today saved on the server', Array.isArray(r.body.state.days[todayKey]) && r.body.state.days[todayKey].every(Boolean));
