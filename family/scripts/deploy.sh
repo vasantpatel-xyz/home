@@ -34,6 +34,7 @@ echo "Deployed. Smoke test:"
 for i in 1 2 3 4 5 6; do
   code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$DOMAIN/healthz" || true)"
   if [ "$code" = "200" ]; then echo "  https://$DOMAIN/healthz -> 200 OK"; break; fi
+  if [ "$code" = "302" ]; then echo "  https://$DOMAIN/healthz -> 302 (Cloudflare Access is in front of the whole site: good)"; break; fi
   echo "  https://$DOMAIN/healthz -> $code (DNS/cert may still be propagating, retry $i/6)"; sleep 10
 done
 home="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$DOMAIN/" || true)"
