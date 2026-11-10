@@ -4,6 +4,7 @@
 //   GET  /api/me                   { email }
 //   GET  /api/boards/<path>        { version, state, updatedAt, updatedBy }
 //   PUT  /api/boards/<path>        { version, state }   (version must match; 409 otherwise)
+//   GET/PUT /api/docs/<path>       same shape, any JSON object up to 64 KB (used by the reading page)
 //   *    everything else           static files from public/, bundled into the worker at deploy time
 //   cron                           daily digest email of open move items (needs RESEND_API_KEY)
 //
@@ -36,6 +37,13 @@ export default {
       if (!BOARD_ID.test(id) || id.length > 80) return json({ error: 'bad_board_id' }, 400);
       if (request.method === 'GET') return json(await loadBoard(env, id));
       if (request.method === 'PUT') return saveBoard(request, env, id, auth.email);
+      return text('Method not allowed', 405, { Allow: 'GET, PUT' });
+    }
+    if (url.pathname.startsWith('/api/docs/')) {
+      const id = url.pathname.slice('/api/docs/'.length).replace(/\/+$/, '');
+      if (!BOARD_ID.test(id) || id.length > 80) return json({ error: 'bad_doc_id' }, 400);
+      if (request.method === 'GET') return json(await loadDoc(env, id));
+      if (request.method === 'PUT') return saveDoc(request, env, id, auth.email);
       return text('Method not allowed', 405, { Allow: 'GET, PUT' });
     }
     if (url.pathname.startsWith('/api/')) return json({ error: 'not_found' }, 404);
@@ -126,6 +134,31 @@ function sanitize(s, id) {
     groups.push({ id: g.id, name: g.name.trim().slice(0, 40) || g.id, items });
   }
   return { title, move, groups };
+}
+
+// ---------- docs (free-form JSON, small) ----------
+
+const MAX_DOC = 64 * 1024;
+
+async function loadDoc(env, id) {
+  const raw = await env.KV.get(`doc:${id}`);
+  if (raw) { try { const rec = JSON.parse(raw); if (rec && typeof rec.version === 'number' && rec.state) return rec; } catch {} }
+  return { version: 0, state: {}, updatedAt: null, updatedBy: null };
+}
+
+async function saveDoc(request, env, id, email) {
+  let body;
+  try {
+    const txt = await request.text();
+    if (txt.length > MAX_DOC) return json({ error: 'too_large' }, 413);
+    body = JSON.parse(txt);
+  } catch { return json({ error: 'bad_json' }, 400); }
+  if (!body || typeof body.version !== 'number' || !body.state || typeof body.state !== 'object' || Array.isArray(body.state)) return json({ error: 'bad_doc' }, 400);
+  const current = await loadDoc(env, id);
+  if (body.version !== current.version) return json({ error: 'conflict', ...current }, 409);
+  const rec = { version: current.version + 1, state: body.state, updatedAt: new Date().toISOString(), updatedBy: email };
+  await env.KV.put(`doc:${id}`, JSON.stringify(rec));
+  return json(rec);
 }
 
 // ---------- digest (cron) ----------

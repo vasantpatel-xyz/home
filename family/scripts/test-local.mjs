@@ -85,10 +85,19 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     check('unseeded board starts empty with a To do section', r.status === 200 && r.body.version === 0 && r.body.state.groups[0].id === 'todo' && r.body.state.title === null);
     check('boards are independent', (await api('/api/boards/kai/list')).body.state.groups[0].items.length === 0);
 
+    // free-form docs API (reading page)
+    r = await api('/api/docs/kaavi/reading');
+    check('docs: empty doc at version 0', r.status === 200 && r.body.version === 0 && JSON.stringify(r.body.state) === '{}');
+    r = await put('/api/docs/kaavi/reading', { version: 0, state: { days: { '2026-11-16': [true, true, true, true] }, books: { b1: true } } });
+    check('docs: save -> version 1', r.status === 200 && r.body.version === 1 && r.body.state.books.b1 === true);
+    check('docs: stale version -> 409', (await put('/api/docs/kaavi/reading', { version: 0, state: {} })).status === 409);
+    check('docs: array state -> 400', (await put('/api/docs/kaavi/reading', { version: 1, state: [1] })).status === 400);
+    check('docs: oversized -> 413', (await put('/api/docs/kaavi/reading', { version: 1, state: { x: 'a'.repeat(70000) } })).status === 413);
+
     // static pages bundled into the worker
     r = await fetch(BASE + '/');
     check('GET / serves the family home, no-store', r.status === 200 && (await r.text()).includes('Patel') && r.headers.get('cache-control') === 'no-store');
-    for (const p of ['/kaavi/', '/kaveera/', '/kai/', '/ami/', '/51-hartlander/', '/51-hartlander/move/', '/kaavi/list/', '/assets/board.js']) {
+    for (const p of ['/kaavi/', '/kaavi/reading/', '/kaveera/', '/kai/', '/ami/', '/51-hartlander/', '/51-hartlander/move/', '/kaavi/list/', '/assets/board.js']) {
       check(`GET ${p} -> 200`, (await fetch(BASE + p)).status === 200);
     }
     r = await fetch(BASE + '/kaavi');
@@ -136,6 +145,20 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     r = await api('/api/boards/kaavi/list');
     check('personal list saved with page title, item and new section', r.body.state.title === "Kaavi's list" && r.body.state.groups[0].items[0].t === 'Finish chapter 3' && r.body.state.groups[1].name === 'School');
     check('signed-in name shows in the top bar', (await page.locator('#me').textContent()) === 'local-dev');
+
+    // Kaavi's reading page: 4 steps, grid of 40 days, 4 books; tap steps -> saved -> survives reload
+    await page.goto(BASE + '/kaavi/reading/');
+    await page.waitForSelector('.step');
+    check('reading: 4 steps, 40 days, 4 books rendered', (await page.locator('.step').count()) === 4 && (await page.locator('.day').count()) === 40 && (await page.locator('.book').count()) === 4);
+    check('reading: book 1 shows as finished from the API save', await page.locator('.book.done').count() === 1);
+    for (const i of [0, 1, 2, 3]) await page.locator('.step').nth(i).click();
+    await page.waitForFunction(() => document.getElementById('status').textContent === 'Saved', null, { timeout: 10000 });
+    check('reading: all four steps -> mission done banner', await page.locator('#win.show').isVisible());
+    await page.reload(); await page.waitForSelector('.step');
+    check('reading: today\'s steps survive reload', (await page.locator('.step.done').count()) === 4);
+    r = await api('/api/docs/kaavi/reading');
+    const todayKey = new Date().toLocaleDateString('en-CA');
+    check('reading: today saved on the server', Array.isArray(r.body.state.days[todayKey]) && r.body.state.days[todayKey].every(Boolean));
     check('no JavaScript errors on the pages', errors.length === 0, errors.join(' | '));
     await browser.close();
   } finally { await stop(dev); resend.close(); }
@@ -176,7 +199,8 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
 
 // ---------- C: unconfigured -> fail closed ----------
 {
-  const dev = await startDev({});
+  // wrangler.toml carries the real Access config once setup-access.sh has run; blank it for this mode
+  const dev = await startDev({ ACCESS_TEAM_DOMAIN: '', ACCESS_AUD: '' });
   try {
     const r = await fetch(BASE + '/');
     check('no Access config -> 503 fail closed', r.status === 503 && (await r.text()).includes('setup-access.sh'));

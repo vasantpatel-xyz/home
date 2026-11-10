@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+<title>Kaavi's Reading Quest</title>
+<style>
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.big{font-family:var(--display);font-stretch:75%;font-weight:800;font-size:44px;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.mission{padding:14px}
+.mission h2{margin-bottom:10px}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;align-items:center;gap:14px;padding:14px;border:2px solid var(--line);border-radius:14px;background:var(--bg);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .08s}
+.step:active{transform:scale(.98)}
+.step .box{flex:none;width:34px;height:34px;border-radius:10px;border:3px solid var(--muted);display:grid;place-content:center;font-size:20px;background:var(--surface)}
+.step.done{border-color:var(--done);background:color-mix(in srgb,var(--done) 12%,var(--bg))}
+.step.done .box{background:var(--done);border-color:var(--done);color:#fff}
+.step b{display:block;font-size:16px}
+.step small{color:var(--muted)}
+.step.done b{text-decoration:line-through;color:var(--muted)}
+.win{display:none;text-align:center;padding:18px 14px 6px;font-family:var(--display);font-stretch:80%;font-weight:800;font-size:26px}
+.win.show{display:block;animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.q{margin:12px 0 0;padding:12px 14px;border-left:4px solid var(--accent);background:var(--bg);border-radius:8px;font-size:14px}
+.q b{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:12px 14px}
+.day{aspect-ratio:1;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:grid;place-content:center;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.day.read{background:var(--done);border-color:var(--done);color:#fff;font-size:16px}
+.day.today{outline:2px solid var(--accent);outline-offset:1px}
+.day.missed{background:transparent;color:var(--line)}
+.books{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:12px 14px}
+.book{position:relative;padding:14px 12px 12px;border-radius:12px;color:#fff;min-height:120px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;cursor:pointer;user-select:none;box-shadow:inset 6px 0 0 rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent}
+.book b{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:17px;line-height:1.05}
+.book small{font-size:11px;opacity:.9}
+.book .trophy{position:absolute;top:8px;right:10px;font-size:26px;filter:grayscale(1);opacity:.35}
+.book.done .trophy{filter:none;opacity:1;animation:pop .4s ease}
+.book.done{outline:3px solid var(--done)}
+.stats{display:flex;gap:10px;padding:0 14px 14px}
+.stat{flex:1;text-align:center;padding:10px;border-radius:10px;background:var(--bg)}
+.stat b{display:block;font-family:var(--display);font-stretch:75%;font-weight:800;font-size:26px;color:var(--accent)}
+.stat small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9}
+#confetti i{position:absolute;top:-20px;font-size:22px;animation:fall 1.6s ease-in forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.2}}
+@media (prefers-reduced-motion:reduce){.win.show,.book.done .trophy,#confetti i{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="crumbs"><span><a href="/">Family</a></span><span><a href="/kaavi/">Kaavi</a></span><span>Reading Quest</span></div><span id="me"></span></div>
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Boxcar Children · 4 books · 8 weeks</div>
+      <h1>Kaavi's <span class="arrow">Reading</span> Quest</h1>
+    </div>
+    <div style="text-align:right"><span class="big" id="streak">0</span><div class="eyebrow">day streak</div></div>
+  </header>
+
+  <section class="card mission">
+    <h2 id="missionTitle">Today's mission</h2>
+    <div class="steps" id="steps"></div>
+    <div class="win" id="win">🎉 Mission done! Go play. 🎮</div>
+    <div class="q" id="question"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div class="who"><span class="dot" style="background:var(--done)"></span><h2>Reading days</h2></div><span class="tally" id="daysTally"></span></div>
+    <div class="grid" id="grid"></div>
+    <div class="stats">
+      <div class="stat"><b id="readCount">0</b><small>days read</small></div>
+      <div class="stat"><b id="bestStreak">0</b><small>best streak</small></div>
+      <div class="stat"><b id="booksCount">0</b><small>books done</small></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div class="who"><span class="dot" style="background:var(--accent)"></span><h2>Books</h2></div><span class="tally">tap when finished</span></div>
+    <div class="books" id="books"></div>
+    <p class="note" style="padding:0 14px 12px;margin:0">Finish a book, pick a reward. <a href="https://claude.ai/artifact/Tk2Bnjxrw26QqcxEbbd6qQ" target="_blank" rel="noopener">The full plan ↗</a></p>
+  </section>
+
+  <div class="status" id="status">Loading…</div>
+  <div class="foot" id="meta"></div>
+</div>
+<div id="confetti"></div>
+<script>
+(function(){
+  var API = '/api/docs/kaavi/reading';
+  var START = '2026-11-16'; // Monday, week 1
+  var STEPS = [
+    ['📖','Read one page out loud','3 min · every word counts'],
+    ['🤫','Read the chapter quietly','12 min · 1 or 2 chapters'],
+    ['✂️','Chunk two tricky words','2 min · un / fold / ed'],
+    ['🗣️','Answer out loud','3 min · who, what, and what it shows']
+  ];
+  var BOOKS = [
+    {k:'b1',t:'The Boxcar Children',w:'Nov 16 – Nov 27',c:'#c0392b',q:'What does each kid do to help the family survive? How do they feel about Grandfather at the start vs. the end?'},
+    {k:'b2',t:'Surprise Island',w:'Nov 30 – Dec 11',c:'#1f8a8a',q:'How do the kids make the island feel like home? What do they learn about the new people they meet?'},
+    {k:'b3',t:'The Yellow House Mystery',w:'Dec 14 – Dec 25',c:'#c98a12',q:'What clues do they find, and who figures out what? What does each kid bring to solving it?'},
+    {k:'b4',t:'Mystery Ranch',w:'Dec 28 – Jan 8',c:'#7a4fd6',q:'How does Aunt Jane act at the start, and how does she change? What causes it?'}
+  ];
+  var rec = {version:0, state:{}}, state = {days:{}, books:{}}, timer=null, saving=false, dirty=false;
+  var statusEl = document.getElementById('status');
+
+  function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function parse(s){ var p=s.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+  function weekdays(){ // the 40 weekdays of the plan
+    var out=[], d=parse(START);
+    while(out.length<40){ var dow=d.getDay(); if(dow>=1&&dow<=5) out.push(ymd(d)); d.setDate(d.getDate()+1); }
+    return out;
+  }
+  var DAYS = weekdays(), today = ymd(new Date());
+  function dayDone(k){ var s=state.days[k]; return !!(s && s.length===4 && s.every(Boolean)); }
+  function currentBook(){ var i = Math.max(0, Math.min(3, Math.floor(DAYS.indexOf(today)/10))); if(DAYS.indexOf(today)<0 && today>DAYS[39]) i=3; return BOOKS[i]; }
+  function streaks(){
+    var cur=0, best=0, run=0;
+    DAYS.forEach(function(k){ if(k>today) return; if(dayDone(k)){ run++; best=Math.max(best,run); } else if(k<today){ run=0; } });
+    cur = run; return {cur:cur, best:best};
+  }
+
+  function render(){
+    var td = state.days[today] || [false,false,false,false];
+    var inPlan = DAYS.indexOf(today) >= 0;
+    document.getElementById('missionTitle').textContent = inPlan ? "Today's mission" : (today < START ? 'Mission starts Mon, Nov 16' : 'Weekend – bonus reading counts too');
+    document.getElementById('steps').innerHTML = STEPS.map(function(s,i){
+      return '<div class="step'+(td[i]?' done':'')+'" data-i="'+i+'" role="checkbox" aria-checked="'+(!!td[i])+'" tabindex="0"><span class="box">'+(td[i]?'✓':s[0])+'</span><div><b>'+s[1]+'</b><small>'+s[2]+'</small></div></div>';
+    }).join('');
+    document.getElementById('win').className = 'win' + (dayDone(today) ? ' show' : '');
+    var b = currentBook();
+    document.getElementById('question').innerHTML = '<b>Think about it:</b> ' + b.q;
+    var done=0;
+    document.getElementById('grid').innerHTML = DAYS.map(function(k){
+      var d=parse(k), cls='day'; if(dayDone(k)){cls+=' read'; done++;} else if(k<today){cls+=' missed';} if(k===today) cls+=' today';
+      return '<div class="'+cls+'" title="'+k+'">'+(dayDone(k)?'★':d.getDate())+'</div>';
+    }).join('');
+    var st = streaks();
+    document.getElementById('streak').textContent = st.cur;
+    document.getElementById('bestStreak').textContent = st.best;
+    document.getElementById('readCount').textContent = done;
+    document.getElementById('daysTally').textContent = done + ' of 40';
+    var bc=0;
+    document.getElementById('books').innerHTML = BOOKS.map(function(b,i){
+      var dn = !!state.books[b.k]; if(dn) bc++;
+      return '<div class="book'+(dn?' done':'')+'" data-k="'+b.k+'" style="background:'+b.c+'"><span class="trophy">🏆</span><small>Book '+(i+1)+' · '+b.w+'</small><b>'+b.t+'</b></div>';
+    }).join('');
+    document.getElementById('booksCount').textContent = bc;
+  }
+
+  function confetti(){
+    var c=document.getElementById('confetti'), em=['🎉','⭐','📚','🏆','✨'];
+    for(var i=0;i<28;i++){ var s=document.createElement('i'); s.textContent=em[i%em.length]; s.style.left=Math.random()*100+'vw'; s.style.animationDelay=(Math.random()*.4)+'s'; c.appendChild(s); }
+    setTimeout(function(){ c.innerHTML=''; }, 2200);
+  }
+
+  function changed(){ dirty=true; render(); statusEl.textContent='Saving…'; statusEl.className='status'; clearTimeout(timer); timer=setTimeout(save,600); }
+  function save(){
+    if(saving||!dirty) return; saving=true; dirty=false;
+    fetch(API,{method:'PUT',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify({version:rec.version,state:state})})
+    .then(function(r){ return r.json().then(function(b){ return {status:r.status,body:b}; }); })
+    .then(function(res){
+      if(res.status===200){ rec=res.body; if(!dirty){ statusEl.textContent='Saved'; meta(); } }
+      else if(res.status===409){ // someone else saved: take theirs, re-apply today's steps and books, save again
+        var mine=state; rec=res.body; state=rec.state||{days:{},books:{}}; state.days=state.days||{}; state.books=state.books||{};
+        if(mine.days[today]) state.days[today]=mine.days[today]; Object.keys(mine.books).forEach(function(k){ if(mine.books[k]) state.books[k]=true; });
+        dirty=true; render();
+      } else if(res.status===401||res.status===403){ statusEl.textContent='Signed out – reload.'; statusEl.className='status err'; dirty=true; }
+      else { statusEl.textContent='Couldn’t save, will retry.'; statusEl.className='status err'; dirty=true; }
+    }).catch(function(){ statusEl.textContent='Offline – will retry.'; statusEl.className='status err'; dirty=true; })
+    .then(function(){ saving=false; if(dirty){ clearTimeout(timer); timer=setTimeout(save,2000); } });
+  }
+  function meta(){ var m=document.getElementById('meta'); if(!rec.updatedAt){ m.textContent=''; return; } m.textContent='Last change by '+((rec.updatedBy||'').split('@')[0]||'someone')+' · '+new Date(rec.updatedAt).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+  function load(){
+    if(dirty||saving) return;
+    fetch(API,{credentials:'same-origin',cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).then(function(b){
+      rec=b; state=b.state||{}; state.days=state.days||{}; state.books=state.books||{}; render(); statusEl.textContent=''; meta();
+    }).catch(function(){ statusEl.textContent='Couldn’t load. Reload the page.'; statusEl.className='status err'; render(); });
+  }
+
+  document.addEventListener('click', function(e){
+    var s=e.target.closest('.step');
+    if(s){ var i=+s.dataset.i, td=(state.days[today]||[false,false,false,false]).slice(); var was=dayDone(today); td[i]=!td[i]; state.days[today]=td; changed(); if(!was&&dayDone(today)) confetti(); return; }
+    var b=e.target.closest('.book');
+    if(b){ var k=b.dataset.k; if(state.books[k]){ if(!confirm('Un-finish this book?')) return; delete state.books[k]; } else { state.books[k]=true; confetti(); } changed(); }
+  });
+  document.addEventListener('keydown', function(e){ if((e.key===' '||e.key==='Enter') && e.target.classList.contains('step')){ e.preventDefault(); e.target.click(); } });
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') load(); });
+  render(); load();
+})();
+</script>
+<script src="/assets/me.js"></script>
+</body>
+</html>
