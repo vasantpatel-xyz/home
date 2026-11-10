@@ -27,9 +27,9 @@ crons = ["0 12 * * *"]
 # Filled in by scripts/setup-access.sh once the Access application exists.
 # While ACCESS_* are empty the worker answers 503 to everything except /healthz.
 [vars]
-ACCESS_TEAM_DOMAIN = ""
-ACCESS_AUD = ""
-DIGEST_TO = ""
+ACCESS_TEAM_DOMAIN = "dough-fire-pages.cloudflareaccess.com"
+ACCESS_AUD = "ee2808bbdc9bb9ec98290f66343f118cd3dfaa9d29358b1212b7f666df864a83"
+DIGEST_TO = "patelv26@gmail.com"
 
 [[kv_namespaces]]
 binding = "KV"
