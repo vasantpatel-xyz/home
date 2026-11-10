@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploys the Move Board worker to Cloudflare.
+# Deploys the family site worker to Cloudflare.
 #   bash scripts/deploy.sh
 # Credentials come from 1Password (see scripts/cf-env.sh). Safe to re-run.
 set -euo pipefail
@@ -16,6 +16,16 @@ fi
 echo "Deploying worker…"
 npx wrangler deploy
 
+# Optional: Resend key for the daily digest email. Lives in 1Password as item "Resend"
+# (field "credential") in the same vault. Skipped quietly when the item does not exist.
+RESEND_ITEM="${OP_RESEND_ITEM:-op://Claude-Deploy/Resend/credential}"
+if key="$(op read "$RESEND_ITEM" 2>/dev/null)" && [ -n "$key" ]; then
+  printf '%s' "$key" | npx wrangler secret put RESEND_API_KEY >/dev/null && echo "RESEND_API_KEY secret set (digest email enabled)."
+  unset key
+else
+  echo "No Resend key at $RESEND_ITEM — the daily digest email stays off. Add the item and re-run deploy.sh to enable it."
+fi
+
 DOMAIN="$(grep -oE 'pattern *= *"[^"]+"' wrangler.toml | head -1 | sed -E 's/.*"([^"]+)"/\1/')"
 echo
 echo "Deployed. Smoke test:"
@@ -31,4 +41,4 @@ case "$home" in
   *)   echo "  https://$DOMAIN/ -> $home";;
 esac
 echo
-echo "Next: bash scripts/setup-access.sh you@example.com partner@example.com"
+echo "Next: bash scripts/setup-access.sh you@example.com partner@example.com   (everyone who may open the site)"

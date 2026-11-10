@@ -1,0 +1,40 @@
+# Family site — Cloudflare Worker config
+# Deployed by scripts/deploy.sh (credentials come from 1Password, nothing secret lives here).
+
+name = "family-site"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+
+# Only reachable through the custom domain, which sits behind Cloudflare Access.
+workers_dev = false
+preview_urls = false
+routes = [
+  { pattern = "family.vasantpatel.xyz", custom_domain = true }
+]
+
+# Static pages live in public/. run_worker_first makes every request pass through
+# the worker, so the login check applies to static pages too.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "404-page"
+
+[observability]
+enabled = true
+
+# Daily digest of open move items (scripts/deploy.sh adds the Resend key as a secret).
+# 12:00 UTC = 7am Eastern (8am during daylight saving).
+[triggers]
+crons = ["0 12 * * *"]
+
+# Filled in by scripts/setup-access.sh once the Access application exists.
+# While ACCESS_* are empty the worker answers 503 to everything except /healthz.
+[vars]
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""
+DIGEST_TO = ""
+
+[[kv_namespaces]]
+binding = "KV"
+id = "1e71a8fc026f470fa7640989b912ed29"

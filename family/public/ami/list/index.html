@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/board.css">
+<title>Ami's list</title>
+</head>
+<body data-board="ami/list" data-title="Ami's list">
+<div class="wrap">
+  <div class="top"><div class="crumbs"><span><a href="/">Family</a></span><span><a href="/ami/">Ami</a></span><span>List</span></div><span id="me"></span></div>
+  <header class="board">
+    <div>
+      <div class="eyebrow">Shared list</div>
+      <h1 id="title">Ami's list</h1>
+    </div>
+    <div class="count" id="countdown" hidden><b id="days">–</b><span class="eyebrow" id="daysLabel"></span></div>
+  </header>
+  <div class="overall"><span id="overallTxt"></span><div class="bar"><i id="overallBar"></i></div></div>
+  <div id="boxes" style="display:flex;flex-direction:column;gap:14px"></div>
+  <form class="addgroup" id="addgroup"><input placeholder="Add a section…" maxlength="40" autocomplete="off"><button type="submit">Add section</button></form>
+  <div class="status" id="status">Loading…</div>
+  <div class="foot" id="meta"></div>
+</div>
+<script src="/assets/board.js"></script>
+<script src="/assets/me.js"></script>
+</body>
+</html>

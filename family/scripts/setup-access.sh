@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Puts the board behind a Cloudflare Access login (one-time PIN emailed to the
+# Puts the family site behind a Cloudflare Access login (one-time PIN emailed to the
 # addresses you list), then redeploys the worker with the Access audience so it
 # can verify logins itself.
 #   bash scripts/setup-access.sh a@example.com b@example.com
@@ -40,7 +40,7 @@ echo "Zero Trust team domain: $TEAM"
 # 2. Create or update the self-hosted Access application for the board domain
 include="$(printf '%s\n' "$@" | jq -R 'select(length>0) | {email:{email:.}}' | jq -s .)"
 body="$(jq -n --arg d "$DOMAIN" --argjson inc "$include" '{
-  name: "Move Board",
+  name: "Family site",
   type: "self_hosted",
   domain: $d,
   session_duration: "720h",
@@ -65,7 +65,8 @@ APP_ID="$(printf '%s' "$res" | jq -r '.result.id')"
 echo "Access app $APP_ID ready. Allowed: $*"
 
 # 3. Write the audience + team domain into wrangler.toml and redeploy
-sed -i -E "s|^ACCESS_TEAM_DOMAIN *=.*|ACCESS_TEAM_DOMAIN = \"$TEAM\"|; s|^ACCESS_AUD *=.*|ACCESS_AUD = \"$AUD\"|" wrangler.toml
+DIGEST="$(IFS=,; echo "$*")"
+sed -i -E "s|^ACCESS_TEAM_DOMAIN *=.*|ACCESS_TEAM_DOMAIN = \"$TEAM\"|; s|^ACCESS_AUD *=.*|ACCESS_AUD = \"$AUD\"|; s|^DIGEST_TO *=.*|DIGEST_TO = \"$DIGEST\"|" wrangler.toml
 grep -q "ACCESS_AUD = \"$AUD\"" wrangler.toml || die "failed to write ACCESS_AUD into wrangler.toml"
 echo "wrangler.toml updated (commit this change)."
 

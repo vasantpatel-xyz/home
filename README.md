@@ -226,6 +226,6 @@ If you have questions, reply to this email.
 
 ---
 
-## Move Board
+## Family site
 
-`move-board/` is a separate Cloudflare Worker: the shared household move checklist at `move.vasantpatel.xyz`, behind Cloudflare Access. It is deployed with its own scripts, not with this Pages site. See [`move-board/README.md`](move-board/README.md) and [`move-board/CLAUDE.md`](move-board/CLAUDE.md).
+`family/` is a separate Cloudflare Worker: the private family site at `family.vasantpatel.xyz` (per-person spaces, project boards such as the move board at `/51-hartlander/move`), behind Cloudflare Access. It deploys with its own scripts, not with this Pages site, and is meant to live in its own repo. See [`family/README.md`](family/README.md) and [`family/CLAUDE.md`](family/CLAUDE.md).
