@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/board.css">
+<link rel="stylesheet" href="/assets/packing.css">
+<title>Kaavi's packing list</title>
+</head>
+<body data-doc="kaavi/51-hartlander/packing" data-owner="Kaavi" data-prefix="K" data-move="2026-11-14" data-from="13 Cannon" data-to="51 Hartlander">
+<div class="wrap">
+  <div class="top"><div class="crumbs"><span><a href="https://family.vasantpatel.xyz/">Family</a></span><span><a href="/">Kaavi</a></span><span><a href="/51-hartlander/">51 Hartlander</a></span><span>/packing</span></div><span id="me"></span></div>
+  <header class="board">
+    <div>
+      <div class="eyebrow">13 Cannon → 51 Hartlander</div>
+      <h1>Kaavi's <span class="arrow">packing</span> list</h1>
+    </div>
+    <div class="count"><b id="days">–</b><span class="eyebrow" id="daysLabel"></span></div>
+  </header>
+  <div class="overall"><span id="overallTxt"></span><div class="bar"><i id="overallBar"></i></div></div>
+  <div class="tabs" role="tablist" aria-label="Views">
+    <button type="button" class="tab" role="tab" data-v="pack" aria-selected="true">Pack<small>at 13 Cannon</small></button>
+    <button type="button" class="tab" role="tab" data-v="boxes" aria-selected="false">Boxes<small>and labels</small></button>
+    <button type="button" class="tab" role="tab" data-v="unpack" aria-selected="false">Unpack<small>at 51 Hartlander</small></button>
+  </div>
+  <p class="hint" id="hint"></p>
+  <div id="list" style="display:flex;flex-direction:column;gap:14px"></div>
+
+  <form class="card addcard" id="addform" autocomplete="off">
+    <h2 id="formtitle">Add a thing</h2>
+    <label>What is it?<input id="f-t" maxlength="120" placeholder="Lego bin, soccer cleats, desk lamp…" required></label>
+    <div class="two">
+      <label>Where is it now? (13 Cannon)<input id="f-from" maxlength="40" list="fromlist" placeholder="My bedroom"></label>
+      <label>Where does it go? (51 Hartlander)<input id="f-to" maxlength="40" list="tolist" placeholder="My bedroom"></label>
+    </div>
+    <label id="boxfield" hidden>Box<input id="f-box" maxlength="8" placeholder="K1"></label>
+    <datalist id="fromlist"></datalist><datalist id="tolist"></datalist>
+    <div class="btnrow"><button type="submit" class="btn" id="addbtn">Add to my list</button><button type="button" class="btn ghost" id="canceledit" hidden>Cancel</button><button type="button" class="btn danger" id="delbtn" hidden>Take it off the list</button></div>
+  </form>
+
+  <details class="card bulk" id="bulk">
+    <summary>Add a whole list at once</summary>
+    <form id="bulkform">
+      <p class="hint">One thing per line: <b>thing, where it is now, where it goes</b>. The two rooms are optional.</p>
+      <textarea id="bulktext" placeholder="Lego bin, my bedroom, playroom&#10;Soccer cleats, garage, garage&#10;Desk lamp, my bedroom, my bedroom"></textarea>
+      <button type="submit" class="btn">Add them all</button>
+    </form>
+  </details>
+
+  <div class="status" id="status" role="status">Loading…</div>
+  <div class="foot" id="meta"></div>
+  <section id="labels" aria-hidden="true"></section>
+</div>
+<div id="chooser" hidden><div class="sheetbox" role="dialog" aria-modal="true" aria-label="Choose a box" id="chooserbody"></div></div>
+<script src="/assets/packing.js"></script>
+<script src="/assets/me.js"></script>
+</body>
+</html>

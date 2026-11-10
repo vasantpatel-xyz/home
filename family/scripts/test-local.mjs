@@ -12,7 +12,7 @@ import { buildDigest } from '../src/digest.js';
 import { readFileSync } from 'node:fs';
 const { chromium } = createRequire(import.meta.url)('playwright'); // preinstalled globally in the Claude Code container
 
-const PORT = 8787, BASE = `http://127.0.0.1:${PORT}`;
+const PORT = Number(process.env.TEST_PORT) || 8787, BASE = `http://127.0.0.1:${PORT}`;
 const MOVE = '/api/boards/51-hartlander/move';
 let failures = 0;
 function check(name, cond, extra = '') { console.log(`${cond ? 'PASS' : 'FAIL'}  ${name}${cond ? '' : '  ' + extra}`); if (!cond) failures++; }
@@ -127,7 +127,7 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     }
     r = await site('kaavi', '/');
     check('kaavi home lists /reading and /list', (t => t.includes('/reading/') && t.includes('/list/'))(await r.text()));
-    check('kaavi site has no /51-hartlander/', (await site('kaavi', '/51-hartlander/')).status === 404);
+    check('the family move board is not served on kaavi\'s site', (await site('kaavi', '/51-hartlander/move/')).status === 404);
     check('family site has no /reading/', (await site('family', '/reading/')).status === 404);
     r = await site('kaavi', '/reading');
     check('/reading (no slash) redirects to /reading/', r.status === 200 && r.url.endsWith('/reading/'));
@@ -178,6 +178,50 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     r = await api('/api/boards/kaavi/list');
     check('personal list saved with page title, item and new section', r.body.state.title === "Kaavi's list" && r.body.state.groups[0].items[0].t === 'Finish chapter 3' && r.body.state.groups[1].name === 'School');
     check('signed-in name shows in the top bar', (await page.locator('#me').textContent()) === 'local-dev');
+
+    // Kaavi's packing list: add things, box them, labels, unpack view, merge with another phone
+    const PK = '/api/docs/kaavi/51-hartlander/packing';
+    const pkSaved = () => page.waitForFunction(() => document.getElementById('status').textContent === 'Saved', null, { timeout: 10000 });
+    await page.goto(H('kaavi') + '/51-hartlander/packing/');
+    await page.waitForSelector('.empty');
+    check('packing: empty list explains how to start', (await page.locator('.empty').textContent()).includes('Start your list'));
+    await page.fill('#f-t', 'Lego bin'); await page.fill('#f-from', 'my bedroom'); await page.fill('#f-to', 'Playroom'); await page.click('#addbtn'); await pkSaved();
+    await page.fill('#f-t', 'Desk lamp'); await page.fill('#f-to', 'My bedroom'); await page.click('#addbtn'); await pkSaved();
+    check('packing: rooms carry over to the next thing, spelling is unified, pack view groups by where it is now', (await page.locator('.prow').count()) === 2 && (await page.locator('.box h2').allTextContents()).join('|') === 'My bedroom');
+    await page.locator('.tick').first().click(); await page.waitForSelector('#chooser:not([hidden])');
+    check('packing: tapping a thing asks which box and offers a new one', (await page.locator('.pick.new').textContent()).includes('K1'));
+    await page.locator('.pick.new').click(); await pkSaved();
+    await page.locator('.tick').nth(1).click(); await page.waitForSelector('#chooser:not([hidden])');
+    check('packing: an existing box for a different room is offered without the "same room" mark', (await page.locator('.pick[data-box="K1"]').count()) === 1 && (await page.locator('.pick.match').count()) === 0 && (await page.locator('.pick.new').textContent()).includes('K2'));
+    await page.locator('.pick[data-box="K1"]').click(); await pkSaved();
+    check('packing: both packed, progress updated', (await page.locator('#overallTxt').textContent()).startsWith('2 of 2 packed'));
+    await page.locator('.tab[data-v="boxes"]').click();
+    check('packing: a box headed to two rooms is flagged', (await page.locator('.warn').count()) === 1 && (await page.locator('.box h2').first().textContent()).includes('2 rooms'));
+    await page.locator('.edit').nth(1).click(); await page.fill('#f-box', 'k2'); await page.click('#addbtn'); await pkSaved();
+    check('packing: after moving one thing, each box goes to one room', (await page.locator('.warn').count()) === 0 && (await page.locator('.box h2').allTextContents()).join('|') === 'Box K1 → Playroom|Box K2 → My bedroom');
+    await page.emulateMedia({ media: 'print' });
+    check('packing: one printable label per box, everything else hidden in print', (await page.locator('.label').count()) === 2 && await page.locator('.label').first().isVisible() && !(await page.locator('#addform').isVisible()) && (await page.locator('.label .to').first().textContent()).includes('Playroom') && (await page.locator('.label .boxno').first().textContent()) === 'BOX K1');
+    await page.emulateMedia({ media: 'screen' });
+    r = await api(PK);
+    const other3 = structuredClone(r.body.state); other3.items.push({ id: 'parent1', t: 'Soccer cleats', from: 'Garage', to: 'Garage', box: '', s: 0 });
+    await put(PK, { version: r.body.version, state: other3 });
+    await page.locator('.tab[data-v="unpack"]').click();
+    await page.locator('.tick').first().click(); await pkSaved();
+    r = await api(PK);
+    check('packing: a thing added on another phone is merged with our tap', r.body.state.items.length === 3 && r.body.state.items.find((i) => i.t === 'Desk lamp').s === 2 && r.body.state.items.some((i) => i.id === 'parent1'));
+    check('packing: unpack view groups by the room in the new house', (await page.locator('.box h2').allTextContents()).join('|') === 'Garage|My bedroom|Playroom');
+    await page.locator('#bulk summary').click();
+    await page.fill('#bulktext', '- Bike helmet, garage, garage\n2. Books | My bedroom | Loft\n\n3DS games\nJust a name');
+    await page.click('#bulkform button'); await pkSaved();
+    r = await api(PK);
+    check('packing: adding a whole list parses each line', r.body.state.items.length === 7 && r.body.state.items.find((i) => i.t === 'Books').to === 'Loft' && r.body.state.items.find((i) => i.t === 'Bike helmet').from === 'Garage' && r.body.state.items.some((i) => i.t === '3DS games') && r.body.state.items.find((i) => i.t === 'Just a name').from === '');
+    await page.locator('.tab[data-v="pack"]').click();
+    await page.locator('.prow', { hasText: 'Just a name' }).locator('.edit').click();
+    page.once('dialog', (d) => d.accept());
+    await page.click('#delbtn'); await pkSaved();
+    await page.reload(); await page.waitForSelector('.prow');
+    check('packing: removing a thing sticks after reload', (await page.locator('.prow').count()) === 6 && (await page.locator('#overallTxt').textContent()).startsWith('2 of 6 packed · 1 placed'));
+    check('packing: linked from Kaavi\'s home, his move hub, and the family move hub', (await (await site('kaavi', '/')).text()).includes('/51-hartlander/packing/') && (await site('kaavi', '/51-hartlander/')).status === 200 && (await (await site('family', '/51-hartlander/')).text()).includes('kaavi.vasantpatel.xyz/51-hartlander/packing/'));
 
     // Kaavi's Reading Quest: mission, grown-up stars, stamp card, books, then the printable sheet
     const todayKey = new Date().toLocaleDateString('en-CA');
