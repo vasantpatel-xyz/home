@@ -4,6 +4,15 @@
 
 OP_ITEM="${OP_ITEM:-op://Claude-Deploy/Cloudflare Move Board}"
 
+# Fallback: if the token and account id are already in the environment (set as
+# secret environment variables on the Claude Code cloud environment), use them
+# and skip 1Password entirely.
+if [ -n "${CLOUDFLARE_API_TOKEN:-}" ] && [ -n "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+  export CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID WRANGLER_SEND_METRICS=false CI=1
+  echo "Cloudflare credentials taken from environment variables (token length ${#CLOUDFLARE_API_TOKEN}, account ${CLOUDFLARE_ACCOUNT_ID:0:4}…)."
+  return 0 2>/dev/null || exit 0
+fi
+
 if ! command -v op >/dev/null 2>&1; then
   echo "1Password CLI (op) is not installed. Run: bash scripts/install-op.sh" >&2
   exit 1

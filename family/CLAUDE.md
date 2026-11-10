@@ -25,6 +25,8 @@ op read "op://Claude-Deploy/Resend/credential" 2>/dev/null | wc -c
 
 Expected: "OP token present", `op` installs and prints its version, the two Cloudflare lines print numbers greater than 10. The Resend line may print 0; that only means the daily digest email stays off.
 
+Alternative without 1Password: if `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are already set as environment variables (`test -n "$CLOUDFLARE_API_TOKEN" && echo set`), the scripts use them and the `op` lines above may fail harmlessly. Skip to Step 2.
+
 **If it fails**
 
 - `OP token MISSING`: stop. Tell the user to add `OP_SERVICE_ACCOUNT_TOKEN` to the Claude Code cloud environment (claude.ai → Code → environment settings → Environment variables) and start a new session.

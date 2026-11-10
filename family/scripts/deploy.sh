@@ -19,7 +19,7 @@ npx wrangler deploy
 # Optional: Resend key for the daily digest email. Lives in 1Password as item "Resend"
 # (field "credential") in the same vault. Skipped quietly when the item does not exist.
 RESEND_ITEM="${OP_RESEND_ITEM:-op://Claude-Deploy/Resend/credential}"
-if key="$(op read "$RESEND_ITEM" 2>/dev/null)" && [ -n "$key" ]; then
+if key="${RESEND_API_KEY:-$(command -v op >/dev/null 2>&1 && op read "$RESEND_ITEM" 2>/dev/null)}" && [ -n "$key" ]; then
   printf '%s' "$key" | npx wrangler secret put RESEND_API_KEY >/dev/null && echo "RESEND_API_KEY secret set (digest email enabled)."
   unset key
 else
