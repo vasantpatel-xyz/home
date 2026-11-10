@@ -11,51 +11,64 @@
 .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .big{font-family:var(--display);font-stretch:75%;font-weight:800;font-size:44px;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
 .mission{padding:14px}
-.mission h2{margin-bottom:10px}
+.mhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.prompt{margin:0 0 12px;padding:14px;border-radius:12px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));border:1px dashed var(--accent)}
+.prompt .eyebrow{color:var(--accent);margin-bottom:6px}
+.prompt p{margin:0 0 8px;font-size:16px;font-weight:600;line-height:1.35}
+.prompt ol{margin:0;padding-left:20px;font-size:14px}
+.prompt ol li{margin:4px 0}
 .steps{display:flex;flex-direction:column;gap:10px}
-.step{display:flex;align-items:center;gap:14px;padding:14px;border:2px solid var(--line);border-radius:14px;background:var(--bg);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .08s}
-.step:active{transform:scale(.98)}
+.step{display:flex;align-items:center;gap:14px;padding:14px;border:2px solid var(--line);border-radius:14px;background:var(--bg);user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .08s}
+.step[data-i]{cursor:pointer}
+.step[data-i]:active{transform:scale(.98)}
 .step .box{flex:none;width:34px;height:34px;border-radius:10px;border:3px solid var(--muted);display:grid;place-content:center;font-size:20px;background:var(--surface)}
 .step.done{border-color:var(--done);background:color-mix(in srgb,var(--done) 12%,var(--bg))}
 .step.done .box{background:var(--done);border-color:var(--done);color:#fff}
-.step b{display:block;font-size:16px}
-.step small{color:var(--muted)}
-.step.done b{text-decoration:line-through;color:var(--muted)}
-.win{display:none;text-align:center;padding:18px 14px 6px;font-family:var(--display);font-stretch:80%;font-weight:800;font-size:26px}
+.step b{display:block;font-size:16px;line-height:1.25}
+.step small{color:var(--muted);display:block}
+.step.done[data-i] b{text-decoration:line-through;color:var(--muted)}
+.step:focus-visible,.star:focus-visible,.book:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.step.parent{border-style:dashed;align-items:flex-start}
+.step .grow{flex:1;min-width:0}
+.stars{display:flex;gap:8px;margin:10px 0 6px;flex-wrap:wrap}
+.star{font:inherit;font-size:17px;line-height:1;padding:10px 12px;min-height:44px;border-radius:10px;border:2px solid var(--line);background:var(--surface);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.star.on{border-color:var(--done);background:color-mix(in srgb,var(--done) 18%,var(--surface))}
+.star:disabled{opacity:.4;cursor:not-allowed}
+.legend{font-size:12px}
+.win{display:none;text-align:center;padding:16px 8px 4px;font-family:var(--display);font-stretch:80%;font-weight:800;font-size:24px}
 .win.show{display:block;animation:pop .4s ease}
 @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
 .q{margin:12px 0 0;padding:12px 14px;border-left:4px solid var(--accent);background:var(--bg);border-radius:8px;font-size:14px}
 .q b{color:var(--accent)}
-.prompt{margin:10px 0 0;padding:14px;border-radius:12px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));border:1px dashed var(--accent)}
-.prompt .eyebrow{color:var(--accent);margin-bottom:6px}
-.prompt p{margin:0 0 8px;font-size:16px;font-weight:600;line-height:1.35}
-.prompt ol{margin:0;padding-left:20px;font-size:14px}
-.prompt ol li{margin:3px 0}
-.rules{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;padding:10px 14px 14px;font-size:13px}
+.printlink{display:block;margin-top:12px;text-align:center;padding:12px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--fg);font-weight:600}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;padding:12px 14px 14px;font-size:13px}
 .rules div{display:flex;gap:8px;align-items:flex-start}
 .rules span{flex:none}
-.step.parent{border-style:dashed}
-.step .box.small{font-size:16px}
 .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:12px 14px}
-.day{aspect-ratio:1;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:grid;place-content:center;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.day.read{background:var(--done);border-color:var(--done);color:#fff;font-size:16px}
-.day.today{outline:2px solid var(--accent);outline-offset:1px}
-.day.missed{background:transparent;color:var(--line)}
+.day{aspect-ratio:1;border-radius:8px;background:var(--bg);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:center;overflow:hidden}
+.day.read{background:var(--done);border-color:var(--done);color:#fff}
+.day.read .st{font-size:13px;letter-spacing:-1px;line-height:1}
+.day.read small{font-size:10px;opacity:.9}
+.day.next{outline:2px dashed var(--accent);outline-offset:1px;color:var(--accent);font-weight:700}
 .books{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:12px 14px}
-.book{position:relative;padding:14px 12px 12px;border-radius:12px;color:#fff;min-height:120px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;cursor:pointer;user-select:none;box-shadow:inset 6px 0 0 rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent}
+.book{position:relative;padding:14px 12px 12px;border-radius:12px;color:#fff;min-height:120px;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;cursor:pointer;user-select:none;box-shadow:inset 6px 0 0 rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent;border:0;text-align:left;font:inherit}
 .book b{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:17px;line-height:1.05}
-.book small{font-size:11px;opacity:.9}
-.book .trophy{position:absolute;top:8px;right:10px;font-size:26px;filter:grayscale(1);opacity:.35}
-.book.done .trophy{filter:none;opacity:1;animation:pop .4s ease}
+.book small{font-size:11px;opacity:.95}
+.book .trophy{position:absolute;top:8px;right:10px;font-size:26px;filter:grayscale(1);opacity:.4}
+.book.done .trophy{filter:none;opacity:1}
 .book.done{outline:3px solid var(--done)}
+.book.now::after{content:"Reading now";position:absolute;top:10px;left:14px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(0,0,0,.35);padding:3px 6px;border-radius:6px}
+.nudge{margin:0;padding:0 14px 12px;font-size:13px;color:var(--muted)}
 .stats{display:flex;gap:10px;padding:0 14px 14px}
-.stat{flex:1;text-align:center;padding:10px;border-radius:10px;background:var(--bg)}
-.stat b{display:block;font-family:var(--display);font-stretch:75%;font-weight:800;font-size:26px;color:var(--accent)}
-.stat small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.stat{flex:1;text-align:center;padding:10px 6px;border-radius:10px;background:var(--bg)}
+.stat b{display:block;font-family:var(--display);font-stretch:75%;font-weight:800;font-size:26px;color:var(--accent);font-variant-numeric:tabular-nums}
+.stat small{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.status{font-size:12px;color:var(--muted);min-height:16px;text-align:center}
+.status.err{color:var(--err)}
 #confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9}
-#confetti i{position:absolute;top:-20px;font-size:22px;animation:fall 1.6s ease-in forwards}
+#confetti i{position:absolute;top:-30px;font-size:22px;font-style:normal;animation:fall 1.6s ease-in forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:.2}}
-@media (prefers-reduced-motion:reduce){.win.show,.book.done .trophy,#confetti i{animation:none}}
+@media (prefers-reduced-motion:reduce){.win.show{animation:none}#confetti{display:none}.step{transition:none}}
 </style>
 </head>
 <body>
@@ -63,18 +76,19 @@
   <div class="top"><div class="crumbs"><span><a href="https://family.vasantpatel.xyz/">Family</a></span><span><a href="/">Kaavi</a></span><span>/reading</span></div><span id="me"></span></div>
   <header class="hero">
     <div>
-      <div class="eyebrow">Boxcar Children · 4 books · 8 weeks</div>
+      <div class="eyebrow">Boxcar Children · 4 books · 40 stamps</div>
       <h1>Kaavi's <span class="arrow">Reading</span> Quest</h1>
     </div>
     <div style="text-align:right"><span class="big" id="streak">0</span><div class="eyebrow">day streak</div></div>
   </header>
 
   <section class="card mission">
-    <h2 id="missionTitle">Today's mission</h2>
-    <div class="steps" id="steps"></div>
+    <div class="mhead"><h2 id="missionTitle">Today's mission</h2><span class="tally" id="missionSub"></span></div>
     <div class="prompt" id="prompt"></div>
+    <div class="steps" id="steps"></div>
+    <div class="win" id="win" role="status"></div>
     <div class="q" id="question"></div>
-    <div class="win" id="win">🎉 Mission done! Go play. 🎮</div>
+    <a class="printlink" href="/reading/sheet/">🖨️ Print today's writing sheet</a>
   </section>
 
   <section class="card">
@@ -90,139 +104,165 @@
   </section>
 
   <section class="card">
-    <div class="card-head"><div class="who"><span class="dot" style="background:var(--done)"></span><h2>Reading days</h2></div><span class="tally" id="daysTally"></span></div>
+    <div class="card-head"><div class="who"><span class="dot" style="background:var(--done)"></span><h2>Stamp card</h2></div><span class="tally" id="daysTally"></span></div>
     <div class="grid" id="grid"></div>
     <div class="stats">
-      <div class="stat"><b id="readCount">0</b><small>days read</small></div>
+      <div class="stat"><b id="readCount">0</b><small>stamps</small></div>
       <div class="stat"><b id="bestStreak">0</b><small>best streak</small></div>
+      <div class="stat"><b id="neatCount">0</b><small>3-star days</small></div>
       <div class="stat"><b id="booksCount">0</b><small>books done</small></div>
     </div>
   </section>
 
   <section class="card">
-    <div class="card-head"><div class="who"><span class="dot" style="background:var(--accent)"></span><h2>Books</h2></div><span class="tally">tap when finished</span></div>
+    <div class="card-head"><div class="who"><span class="dot" style="background:var(--accent)"></span><h2>Books</h2></div><span class="tally">tap the trophy when finished</span></div>
     <div class="books" id="books"></div>
-    <p class="note" style="padding:0 14px 12px;margin:0">Finish a book, pick a reward. <a href="https://claude.ai/artifact/Tk2Bnjxrw26QqcxEbbd6qQ" target="_blank" rel="noopener">The full plan ↗</a></p>
+    <p class="nudge" id="nudge"></p>
   </section>
 
-  <div class="status" id="status">Loading…</div>
+  <div class="status" id="status" role="status">Loading…</div>
   <div class="foot" id="meta"></div>
 </div>
-<div id="confetti"></div>
+<div id="confetti" aria-hidden="true"></div>
+<script src="/reading/plan.js"></script>
 <script>
 (function(){
-  var API = '/api/docs/kaavi/reading';
-  var START = '2026-11-16'; // Monday, week 1
-  var STEPS = [
-    ['📖','Read one page out loud','3 min · every word, every ending'],
-    ['🤫','Read the chapter quietly','10 min · 1 or 2 chapters'],
-    ['✂️','Write two tricky words in your notebook','2 min · split them: un / fold / ed'],
-    ['✍️','Write today\'s answer neatly','5 min · full sentences, with a quote'],
-    ['👀','Grown-up check: neat + has a quote','Mom or Dad ticks this one']
-  ];
-  // Monday to Friday: each day works one comprehension skill; Friday is the write-up from the plan.
-  var PROMPTS = {
-    1: {skill:'Character trait', q:'What is the main character like today? Pick one word (brave, bossy, kind, careful…).', how:['Write: "___ is ___ because…"','Copy one sentence from the book that proves it, in quotation marks.']},
-    2: {skill:'Problem and action', q:'What problem did the characters face today, and what did they do about it?', how:['Write the problem in one sentence.','Write what they did and why in one or two sentences.']},
-    3: {skill:'Change', q:'How is a character changing from the start of the book until now?', how:['Write: "At first ___. Now ___."','Add one quote that shows the change.']},
-    4: {skill:'Lesson', q:'What lesson is the story teaching so far? What makes you think that?', how:['Write the lesson in one sentence.','Give one example from the book as evidence.']},
-    5: {skill:'Friday write-up', q:'One neat paragraph, same shape as class: trait + quote, how the character changed, the lesson.', how:['Underline each part of the question first.','5 to 7 sentences. Capital letters, periods, quotation marks around the quote.','This is the one Mom and Dad read on Friday night.']}
-  };
-  var WEEKEND = {skill:'Bonus', q:'No mission today. If you read anyway, tell someone the best part of the chapter.', how:[]};
-  var BOOKS = [
-    {k:'b1',t:'The Boxcar Children',w:'Nov 16 – Nov 27',c:'#c0392b',q:'What does each kid do to help the family survive? How do they feel about Grandfather at the start vs. the end?'},
-    {k:'b2',t:'Surprise Island',w:'Nov 30 – Dec 11',c:'#1f8a8a',q:'How do the kids make the island feel like home? What do they learn about the new people they meet?'},
-    {k:'b3',t:'The Yellow House Mystery',w:'Dec 14 – Dec 25',c:'#c98a12',q:'What clues do they find, and who figures out what? What does each kid bring to solving it?'},
-    {k:'b4',t:'Mystery Ranch',w:'Dec 28 – Jan 8',c:'#7a4fd6',q:'How does Aunt Jane act at the start, and how does she change? What causes it?'}
-  ];
-  var rec = {version:0, state:{}}, state = {days:{}, books:{}}, timer=null, saving=false, dirty=false;
+  var Q = window.QUEST, API = '/api/docs/kaavi/reading';
+  var rec = {version:0, state:{}}, state = Q.norm({}), today = Q.ymd(new Date());
+  var timer = null, saving = false, dirty = false, loaded = false;
   var statusEl = document.getElementById('status');
 
-  function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-  function parse(s){ var p=s.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
-  function weekdays(){ // the 40 weekdays of the plan
-    var out=[], d=parse(START);
-    while(out.length<40){ var dow=d.getDay(); if(dow>=1&&dow<=5) out.push(ymd(d)); d.setDate(d.getDate()+1); }
-    return out;
-  }
-  var DAYS = weekdays(), today = ymd(new Date());
-  function dayDone(k){ var s=state.days[k]; return !!(s && s.length>=STEPS.length && s.every(Boolean)); }
-  function blank(){ return STEPS.map(function(){ return false; }); }
-  function currentBook(){ var i = Math.max(0, Math.min(3, Math.floor(DAYS.indexOf(today)/10))); if(DAYS.indexOf(today)<0 && today>DAYS[39]) i=3; return BOOKS[i]; }
-  function streaks(){
-    var cur=0, best=0, run=0;
-    DAYS.forEach(function(k){ if(k>today) return; if(dayDone(k)){ run++; best=Math.max(best,run); } else if(k<today){ run=0; } });
-    cur = run; return {cur:cur, best:best};
-  }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function short(k){ return Q.parse(k).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+  function todaySteps(){ var td = (state.days[today] || []).slice(); while(td.length < Q.STEPS.length) td.push(false); return td; }
+  function setStatus(msg, err){ statusEl.textContent = msg; statusEl.className = 'status' + (err ? ' err' : ''); }
 
   function render(){
-    var td = state.days[today] || blank();
-    var inPlan = DAYS.indexOf(today) >= 0;
-    document.getElementById('missionTitle').textContent = inPlan ? "Today's mission" : (today < START ? 'Mission starts Mon, Nov 16' : 'Weekend – bonus reading counts too');
-    document.getElementById('steps').innerHTML = STEPS.map(function(s,i){
-      return '<div class="step'+(td[i]?' done':'')+(i===STEPS.length-1?' parent':'')+'" data-i="'+i+'" role="checkbox" aria-checked="'+(!!td[i])+'" tabindex="0"><span class="box">'+(td[i]?'✓':s[0])+'</span><div><b>'+s[1]+'</b><small>'+s[2]+'</small></div></div>';
-    }).join('');
-    document.getElementById('win').className = 'win' + (dayDone(today) ? ' show' : '');
-    var b = currentBook(), dow = new Date().getDay(), pr = PROMPTS[dow] || WEEKEND;
-    document.getElementById('prompt').innerHTML = '<div class="eyebrow">Today\'s writing · ' + pr.skill + '</div><p>' + pr.q + '</p>'
-      + (pr.how.length ? '<ol>' + pr.how.map(function(h){ return '<li>'+h+'</li>'; }).join('') + '</ol>' : '');
-    document.getElementById('question').innerHTML = '<b>Big question for ' + b.t + ':</b> ' + b.q;
-    var done=0;
-    document.getElementById('grid').innerHTML = DAYS.map(function(k){
-      var d=parse(k), cls='day'; if(dayDone(k)){cls+=' read'; done++;} else if(k<today){cls+=' missed';} if(k===today) cls+=' today';
-      return '<div class="'+cls+'" title="'+k+'">'+(dayDone(k)?'★':d.getDate())+'</div>';
-    }).join('');
-    var st = streaks();
-    document.getElementById('streak').textContent = st.cur;
-    document.getElementById('bestStreak').textContent = st.best;
-    document.getElementById('readCount').textContent = done;
-    document.getElementById('daysTally').textContent = done + ' of 40';
-    var bc=0;
-    document.getElementById('books').innerHTML = BOOKS.map(function(b,i){
+    var td = todaySteps(), neat = state.neat[today] || 0, done = Q.dayDone(state, today);
+    var st = Q.stamps(state), n = st.length, d = Q.parse(today), weekend = Q.isWeekend(d);
+    var firstFour = td.slice(0,4).every(Boolean), pr = Q.promptFor(today), book = Q.currentBook(state);
+
+    document.getElementById('missionTitle').textContent = weekend ? 'Weekend bonus mission' : "Today's mission";
+    document.getElementById('missionSub').textContent = d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}) + ' · stamp ' + (done ? n : n + 1) + ' of ' + Q.TOTAL;
+
+    document.getElementById('prompt').innerHTML = '<div class="eyebrow">Read with this question in mind · ' + esc(pr.skill) + '</div><p>' + esc(pr.q) + '</p>'
+      + '<ol>' + pr.how.map(function(h){ return '<li>' + esc(h) + '</li>'; }).join('') + '</ol>';
+
+    var html = '';
+    Q.STEPS.forEach(function(s, i){
+      if(i < 4){
+        html += '<div class="step' + (td[i] ? ' done' : '') + '" data-i="' + i + '" role="checkbox" aria-checked="' + (!!td[i]) + '" tabindex="0"><span class="box" aria-hidden="true">' + (td[i] ? '✓' : s.icon) + '</span><div class="grow"><b>' + esc(s.t) + '</b><small>' + esc(s.s) + '</small></div></div>';
+      } else {
+        html += '<div class="step parent' + (td[i] ? ' done' : '') + '"><span class="box" aria-hidden="true">' + (td[i] ? '✓' : s.icon) + '</span><div class="grow"><b>' + esc(s.t) + '</b>'
+          + '<small>' + (firstFour ? 'Mom or Dad: look at the writing, then tap the stars.' : 'Finish the four steps above first.') + '</small>'
+          + '<div class="stars" role="group" aria-label="Neatness stars">' + [1,2,3].map(function(k){
+              return '<button type="button" class="star' + (neat === k ? ' on' : '') + '" data-n="' + k + '" aria-pressed="' + (neat === k) + '" aria-label="' + k + (k > 1 ? ' stars' : ' star') + '"' + (firstFour ? '' : ' disabled') + '>' + '⭐'.repeat(k) + '</button>';
+            }).join('') + '</div>'
+          + '<small class="legend">⭐ finished · ⭐⭐ neat · ⭐⭐⭐ neat, full sentences and a quote</small></div></div>';
+      }
+    });
+    document.getElementById('steps').innerHTML = html;
+
+    var win = document.getElementById('win');
+    win.className = 'win' + (done ? ' show' : '');
+    win.textContent = done ? '🎉 Mission done! Stamp ' + n + ' earned. Go play. 🎮' : '';
+
+    document.getElementById('question').innerHTML = book
+      ? '<b>Big question for ' + esc(book.t) + ':</b> ' + esc(book.q)
+      : '<b>All four books finished! 🏆</b> Tell Mom and Dad which one was your favorite, and why.';
+
+    var cells = '';
+    for(var i = 0; i < Q.TOTAL; i++){
+      if(i < n){ var k = st[i], stars = state.neat[k] || 0;
+        cells += '<div class="day read" title="' + k + '"><span class="st">' + (stars ? '★'.repeat(stars) : '✓') + '</span><small>' + esc(short(k)) + '</small></div>'; }
+      else cells += '<div class="day' + (i === n ? ' next' : '') + '">' + (i + 1) + '</div>';
+    }
+    document.getElementById('grid').innerHTML = cells;
+    document.getElementById('daysTally').textContent = Math.min(n, Q.TOTAL) + ' of ' + Q.TOTAL + (n > Q.TOTAL ? ' · +' + (n - Q.TOTAL) + ' bonus' : '');
+
+    var s = Q.streaks(state, today), three = st.filter(function(k){ return state.neat[k] === 3; }).length, bc = 0;
+    document.getElementById('streak').textContent = s.cur;
+    document.getElementById('bestStreak').textContent = s.best;
+    document.getElementById('readCount').textContent = n;
+    document.getElementById('neatCount').textContent = three;
+
+    document.getElementById('books').innerHTML = Q.BOOKS.map(function(b, ix){
       var dn = !!state.books[b.k]; if(dn) bc++;
-      return '<div class="book'+(dn?' done':'')+'" data-k="'+b.k+'" style="background:'+b.c+'"><span class="trophy">🏆</span><small>Book '+(i+1)+' · '+b.w+'</small><b>'+b.t+'</b></div>';
+      return '<button type="button" class="book' + (dn ? ' done' : '') + (book && book.k === b.k ? ' now' : '') + '" data-k="' + b.k + '" aria-pressed="' + dn + '" style="background:' + b.c + '"><span class="trophy" aria-hidden="true">🏆</span><small>Book ' + (ix + 1) + ' · stamps ' + (ix * 10 + 1) + '–' + (ix * 10 + 10) + '</small><b>' + esc(b.t) + '</b></button>';
     }).join('');
     document.getElementById('booksCount').textContent = bc;
+    var idx = book ? Q.BOOKS.indexOf(book) : -1;
+    document.getElementById('nudge').textContent = (book && n >= (idx + 1) * 10) ? n + ' stamps in. Finished “' + book.t + '”? Tap its trophy, then pick your reward.' : 'Finish a book, pick a reward.';
   }
 
   function confetti(){
-    var c=document.getElementById('confetti'), em=['🎉','⭐','📚','🏆','✨'];
-    for(var i=0;i<28;i++){ var s=document.createElement('i'); s.textContent=em[i%em.length]; s.style.left=Math.random()*100+'vw'; s.style.animationDelay=(Math.random()*.4)+'s'; c.appendChild(s); }
-    setTimeout(function(){ c.innerHTML=''; }, 2200);
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var c = document.getElementById('confetti'), em = ['🎉','⭐','📚','🏆','✨'];
+    for(var i = 0; i < 28; i++){ var s = document.createElement('i'); s.textContent = em[i % em.length]; s.style.left = (Math.random() * 100) + 'vw'; s.style.animationDelay = (Math.random() * .4) + 's'; c.appendChild(s); }
+    setTimeout(function(){ c.innerHTML = ''; }, 2200);
   }
 
-  function changed(){ dirty=true; render(); statusEl.textContent='Saving…'; statusEl.className='status'; clearTimeout(timer); timer=setTimeout(save,600); }
+  function changed(){ dirty = true; render(); setStatus('Saving…'); clearTimeout(timer); timer = setTimeout(save, 500); }
   function save(){
-    if(saving||!dirty) return; saving=true; dirty=false;
-    fetch(API,{method:'PUT',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify({version:rec.version,state:state})})
-    .then(function(r){ return r.json().then(function(b){ return {status:r.status,body:b}; }); })
+    if(saving || !dirty) return; saving = true; dirty = false;
+    fetch(API, {method:'PUT', headers:{'content-type':'application/json'}, credentials:'same-origin', body: JSON.stringify({version: rec.version, state: state})})
+    .then(function(r){ return r.json().then(function(b){ return {status: r.status, body: b}; }); })
     .then(function(res){
-      if(res.status===200){ rec=res.body; if(!dirty){ statusEl.textContent='Saved'; meta(); } }
-      else if(res.status===409){ // someone else saved: take theirs, re-apply today's steps and books, save again
-        var mine=state; rec=res.body; state=rec.state||{days:{},books:{}}; state.days=state.days||{}; state.books=state.books||{};
-        if(mine.days[today]) state.days[today]=mine.days[today]; Object.keys(mine.books).forEach(function(k){ if(mine.books[k]) state.books[k]=true; });
-        dirty=true; render();
-      } else if(res.status===401||res.status===403){ statusEl.textContent='Signed out – reload.'; statusEl.className='status err'; dirty=true; }
-      else { statusEl.textContent='Couldn’t save, will retry.'; statusEl.className='status err'; dirty=true; }
-    }).catch(function(){ statusEl.textContent='Offline – will retry.'; statusEl.className='status err'; dirty=true; })
-    .then(function(){ saving=false; if(dirty){ clearTimeout(timer); timer=setTimeout(save,2000); } });
+      if(res.status === 200){ rec = res.body; if(!dirty){ setStatus('Saved'); meta(); } }
+      else if(res.status === 409){ // someone else saved first: take their copy, put today's taps and finished books back on top, save again
+        var mine = state; rec = {version: res.body.version, state: res.body.state, updatedAt: res.body.updatedAt, updatedBy: res.body.updatedBy};
+        state = Q.norm(rec.state);
+        if(mine.days[today]) state.days[today] = mine.days[today];
+        if(mine.neat[today]) state.neat[today] = mine.neat[today]; else delete state.neat[today];
+        Object.keys(mine.books).forEach(function(k){ if(mine.books[k]) state.books[k] = true; });
+        dirty = true; render();
+      } else if(res.status === 401 || res.status === 403){ setStatus('Signed out. Reload the page to sign in again.', true); dirty = true; }
+      else { setStatus('Couldn’t save. Trying again…', true); dirty = true; }
+    })
+    .catch(function(){ setStatus('Offline. Your taps are kept and will save when you are back online.', true); dirty = true; })
+    .then(function(){ saving = false; if(dirty){ clearTimeout(timer); timer = setTimeout(save, 2500); } });
   }
-  function meta(){ var m=document.getElementById('meta'); if(!rec.updatedAt){ m.textContent=''; return; } m.textContent='Last change by '+((rec.updatedBy||'').split('@')[0]||'someone')+' · '+new Date(rec.updatedAt).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+  function meta(){
+    var m = document.getElementById('meta');
+    if(!rec.updatedAt){ m.textContent = ''; return; }
+    m.textContent = 'Last change by ' + ((rec.updatedBy || '').split('@')[0] || 'someone') + ' · ' + new Date(rec.updatedAt).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  }
   function load(){
-    if(dirty||saving) return;
-    fetch(API,{credentials:'same-origin',cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }).then(function(b){
-      rec=b; state=b.state||{}; state.days=state.days||{}; state.books=state.books||{}; render(); statusEl.textContent=''; meta();
-    }).catch(function(){ statusEl.textContent='Couldn’t load. Reload the page.'; statusEl.className='status err'; render(); });
+    if(dirty || saving) return;
+    today = Q.ymd(new Date());
+    fetch(API, {credentials:'same-origin', cache:'no-store'}).then(function(r){
+      if(r.status === 401 || r.status === 403){ setStatus('Signed out. Reload the page to sign in again.', true); return null; }
+      if(!r.ok) throw new Error(r.status); return r.json();
+    }).then(function(b){
+      if(!b || dirty || saving) return;
+      rec = b; state = Q.norm(b.state); loaded = true; render(); setStatus(''); meta();
+    }).catch(function(){ if(!loaded) setStatus('Couldn’t load your progress. Check the connection and reload.', true); });
   }
 
   document.addEventListener('click', function(e){
-    var s=e.target.closest('.step');
-    if(s){ var i=+s.dataset.i, td=(state.days[today]||blank()).slice(); while(td.length<STEPS.length) td.push(false); var was=dayDone(today); td[i]=!td[i]; state.days[today]=td; changed(); if(!was&&dayDone(today)) confetti(); return; }
-    var b=e.target.closest('.book');
-    if(b){ var k=b.dataset.k; if(state.books[k]){ if(!confirm('Un-finish this book?')) return; delete state.books[k]; } else { state.books[k]=true; confetti(); } changed(); }
+    var star = e.target.closest('.star');
+    if(star){
+      if(star.disabled) return;
+      var n = +star.dataset.n, td = todaySteps(), was = Q.dayDone(state, today);
+      if(state.neat[today] === n){ delete state.neat[today]; td[4] = false; } else { state.neat[today] = n; td[4] = true; }
+      state.days[today] = td; changed(); if(!was && Q.dayDone(state, today)) confetti();
+      var sb = document.querySelector('.star[data-n="' + n + '"]'); if(sb) sb.focus({preventScroll:true}); return;
+    }
+    var s = e.target.closest('.step[data-i]');
+    if(s){ var i = +s.dataset.i, t2 = todaySteps(); t2[i] = !t2[i]; state.days[today] = t2; changed();
+      var se = document.querySelector('.step[data-i="' + i + '"]'); if(se) se.focus({preventScroll:true}); return; }
+    var b = e.target.closest('.book');
+    if(b){ var k = b.dataset.k;
+      if(state.books[k]){ if(!confirm('Mark this book as not finished?')) return; delete state.books[k]; }
+      else { state.books[k] = true; confetti(); }
+      changed(); }
   });
-  document.addEventListener('keydown', function(e){ if((e.key===' '||e.key==='Enter') && e.target.classList.contains('step')){ e.preventDefault(); e.target.click(); } });
-  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') load(); });
+  document.addEventListener('keydown', function(e){
+    if((e.key === ' ' || e.key === 'Enter') && e.target.matches && e.target.matches('.step[data-i]')){ e.preventDefault(); e.target.click(); }
+  });
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') load(); });
+  window.addEventListener('online', function(){ if(dirty) save(); else load(); });
+  window.addEventListener('pagehide', function(){ if(dirty && !saving){ try{ fetch(API, {method:'PUT', keepalive:true, headers:{'content-type':'application/json'}, credentials:'same-origin', body: JSON.stringify({version: rec.version, state: state})}); }catch(_){} } });
   render(); load();
 })();
 </script>

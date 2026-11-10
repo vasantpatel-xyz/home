@@ -9,6 +9,7 @@ import { generateKeyPairSync, createSign, randomUUID } from 'node:crypto';
 import { rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { buildDigest } from '../src/digest.js';
+import { readFileSync } from 'node:fs';
 const { chromium } = createRequire(import.meta.url)('playwright'); // preinstalled globally in the Claude Code container
 
 const PORT = 8787, BASE = `http://127.0.0.1:${PORT}`;
@@ -53,6 +54,28 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
   check('digest: list with no date and nothing open -> null', buildDigest({ title: 'x', move: null, groups: [{ id: 'a', name: 'A', items: [{ t: 'z', d: true }] }] }, new Date()) === null);
 }
 
+// ---------- Reading Quest rules (pure, from public/kaavi/reading/plan.js) ----------
+{
+  const w = {}; new Function('window', readFileSync(new URL('../public/kaavi/reading/plan.js', import.meta.url), 'utf8'))(w);
+  const Q = w.QUEST, T = [true, true, true, true, true];
+  const st = (days, extra = {}) => Q.norm({ days, ...extra });
+  check('quest: 5 steps, 40 stamps, 4 books, a prompt for every weekday', Q.STEPS.length === 5 && Q.TOTAL === 40 && Q.BOOKS.length === 4 && [1, 2, 3, 4, 5].every((d) => Q.PROMPTS[d] && Q.PROMPTS[d].how.length >= 2 && Q.PROMPTS[d].lines > 0));
+  check('quest: a day needs all five steps (grown-up check included)', !Q.dayDone(st({ a: [true, true, true, true] }), 'a') && !Q.dayDone(st({ a: [true, true, true, true, false] }), 'a') && Q.dayDone(st({ a: T }), 'a'));
+  check('quest: norm repairs missing or junk state', (() => { const n = Q.norm({ days: 5, neat: null }); return typeof n.days === 'object' && typeof n.neat === 'object' && typeof n.books === 'object' && Q.stamps(Q.norm(null)).length === 0; })());
+  check('quest: stamps are sorted and ignore unfinished or junk keys', JSON.stringify(Q.stamps(st({ '2026-11-12': T, '2026-11-10': T, '2026-11-11': [true], junk: T }))) === '["2026-11-10","2026-11-12"]');
+  // Tue Nov 10 + Wed Nov 11 done, today Thu Nov 12 not done yet -> streak 2 (today does not break it)
+  check('quest: streak counts days in a row, today not yet done does not break it', Q.streaks(st({ '2026-11-10': T, '2026-11-11': T }), '2026-11-12').cur === 2);
+  check('quest: finishing today extends the streak', Q.streaks(st({ '2026-11-10': T, '2026-11-11': T, '2026-11-12': T }), '2026-11-12').cur === 3);
+  check('quest: a missed weekday resets the streak, best is kept', (() => { const r = Q.streaks(st({ '2026-11-10': T, '2026-11-11': T, '2026-11-13': T }), '2026-11-13'); return r.cur === 1 && r.best === 2; })());
+  check('quest: a weekend does not break the streak', Q.streaks(st({ '2026-11-13': T, '2026-11-16': T }), '2026-11-16').cur === 2);
+  check('quest: a weekend mission adds to the streak', Q.streaks(st({ '2026-11-13': T, '2026-11-14': T, '2026-11-16': T }), '2026-11-16').cur === 3);
+  check('quest: streak is 0 with no stamps, and survives a stamp dated in the future', Q.streaks(st({}), '2026-11-10').cur === 0 && Q.streaks(st({ '2026-12-01': T }), '2026-11-10').cur === 0);
+  check('quest: streak over a month boundary', Q.streaks(st({ '2026-11-30': T, '2026-12-01': T }), '2026-12-01').cur === 2);
+  check('quest: current book is the first unfinished one, null when all done', Q.currentBook(st({}, { books: {} })).k === 'b1' && Q.currentBook(st({}, { books: { b1: true } })).k === 'b2' && Q.currentBook(st({}, { books: { b1: true, b2: true, b3: true, b4: true } })) === null);
+  check('quest: prompts follow the weekday; weekend gets the bonus', Q.promptFor('2026-11-10').skill === 'Problem and action' && Q.promptFor('2026-11-13').skill === 'Friday write-up' && Q.promptFor('2026-11-14').skill === 'Weekend bonus' && Q.promptFor('2026-11-16').skill === 'Character trait');
+  check('quest: date helpers round-trip', Q.ymd(Q.parse('2026-01-04')) === '2026-01-04' && Q.isDate('2026-11-10') && !Q.isDate('nope') && Q.isWeekend(Q.parse('2026-11-14')) && !Q.isWeekend(Q.parse('2026-11-13')));
+}
+
 // ---------- A: open mode ----------
 {
   // mock Resend so the cron can be exercised offline
@@ -89,7 +112,8 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     // free-form docs API (reading page)
     r = await api('/api/docs/kaavi/reading');
     check('docs: empty doc at version 0', r.status === 200 && r.body.version === 0 && JSON.stringify(r.body.state) === '{}');
-    r = await put('/api/docs/kaavi/reading', { version: 0, state: { days: { '2026-11-16': [true, true, true, true] }, books: { b1: true } } });
+    const prevWeekday = (() => { const d = new Date(); do { d.setDate(d.getDate() - 1); } while (d.getDay() === 0 || d.getDay() === 6); return d.toLocaleDateString('en-CA'); })();
+    r = await put('/api/docs/kaavi/reading', { version: 0, state: { days: { [prevWeekday]: [true, true, true, true, true] }, neat: { [prevWeekday]: 3 }, books: { b1: true } } });
     check('docs: save -> version 1', r.status === 200 && r.body.version === 1 && r.body.state.books.b1 === true);
     check('docs: stale version -> 409', (await put('/api/docs/kaavi/reading', { version: 0, state: {} })).status === 409);
     check('docs: array state -> 400', (await put('/api/docs/kaavi/reading', { version: 1, state: [1] })).status === 400);
@@ -155,20 +179,54 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     check('personal list saved with page title, item and new section', r.body.state.title === "Kaavi's list" && r.body.state.groups[0].items[0].t === 'Finish chapter 3' && r.body.state.groups[1].name === 'School');
     check('signed-in name shows in the top bar', (await page.locator('#me').textContent()) === 'local-dev');
 
-    // Kaavi's reading page: 4 steps, grid of 40 days, 4 books; tap steps -> saved -> survives reload
-    await page.goto(H('kaavi') + '/reading/');
-    await page.waitForSelector('.step');
-    check('reading: 5 steps, 40 days, 4 books rendered', (await page.locator('.step').count()) === 5 && (await page.locator('.day').count()) === 40 && (await page.locator('.book').count()) === 4);
-    check('reading: book 1 shows as finished from the API save', await page.locator('.book.done').count() === 1);
-    for (const i of [0, 1, 2, 3, 4]) await page.locator('.step').nth(i).click();
-    await page.waitForFunction(() => document.getElementById('status').textContent === 'Saved', null, { timeout: 10000 });
-    check('reading: all five steps -> mission done banner', await page.locator('#win.show').isVisible());
-    await page.reload(); await page.waitForSelector('.step');
-    check('reading: today\'s steps survive reload', (await page.locator('.step.done').count()) === 5);
-    check('reading: writing prompt shown', (await page.locator('#prompt').textContent()).includes('writing'));
-    r = await api('/api/docs/kaavi/reading');
+    // Kaavi's Reading Quest: mission, grown-up stars, stamp card, books, then the printable sheet
     const todayKey = new Date().toLocaleDateString('en-CA');
-    check('reading: today saved on the server', Array.isArray(r.body.state.days[todayKey]) && r.body.state.days[todayKey].every(Boolean));
+    const saved = () => page.waitForFunction(() => document.getElementById('status').textContent === 'Saved', null, { timeout: 10000 });
+    await page.goto(H('kaavi') + '/reading/');
+    await page.waitForSelector('.day.read');
+    check('reading: 4 tappable steps + grown-up row, 40 stamps, 4 books', (await page.locator('.step[data-i]').count()) === 4 && (await page.locator('.step.parent').count()) === 1 && (await page.locator('.day').count()) === 40 && (await page.locator('.book').count()) === 4);
+    check('reading: seeded stamp shows with three stars', (await page.locator('.day.read').count()) === 1 && (await page.locator('.day.read .st').first().textContent()) === '★★★');
+    check('reading: book 1 finished, book 2 is "reading now", big question follows it', (await page.locator('.book.done').count()) === 1 && (await page.locator('.book.now').getAttribute('data-k')) === 'b2' && (await page.locator('#question').textContent()).includes('Surprise Island'));
+    check('reading: question shown before the steps, with sentence starters', (await page.locator('#prompt').textContent()).includes('Read with this question in mind') && (await page.locator('#prompt li').count()) >= 2);
+    check('reading: stars locked until the four steps are done', await page.locator('.star').first().isDisabled());
+    for (const i of [0, 1, 2, 3]) await page.locator(`.step[data-i="${i}"]`).click();
+    check('reading: four steps ticked, no stamp yet without the grown-up check', (await page.locator('.step.done').count()) === 4 && !(await page.locator('#win').isVisible()) && (await page.locator('.day.read').count()) === 1);
+    check('reading: stars unlock after the four steps', await page.locator('.star').first().isEnabled());
+    await page.locator('.star[data-n="2"]').click(); await saved();
+    check('reading: grown-up stars finish the mission', await page.locator('#win.show').isVisible() && (await page.locator('.day.read').count()) === 2 && (await page.locator('#win').textContent()).includes('Stamp 2'));
+    check('reading: streak counts the seeded day plus today', (await page.locator('#streak').textContent()) === '2');
+    await page.reload(); await page.waitForSelector('.star.on');
+    check('reading: progress and stars survive reload', (await page.locator('.step.done').count()) === 5 && (await page.locator('.star.on').getAttribute('data-n')) === '2');
+    r = await api('/api/docs/kaavi/reading');
+    check('reading: today saved on the server with its stars', Array.isArray(r.body.state.days[todayKey]) && r.body.state.days[todayKey].length === 5 && r.body.state.days[todayKey].every(Boolean) && r.body.state.neat[todayKey] === 2);
+    await page.locator('.star[data-n="2"]').click(); await saved();
+    check('reading: tapping the same stars again takes the stamp back', !(await page.locator('#win').isVisible()) && (await page.locator('.day.read').count()) === 1);
+    await page.locator('.star[data-n="3"]').click(); await saved();
+    check('reading: three stars counted', (await page.locator('#neatCount').textContent()) === '2' && (await page.locator('.day.read').count()) === 2);
+    // another device saves in between (book 2 finished on a parent's phone): our next tap must merge, not overwrite
+    r = await api('/api/docs/kaavi/reading');
+    const other2 = structuredClone(r.body.state); other2.books.b2 = true;
+    await put('/api/docs/kaavi/reading', { version: r.body.version, state: other2 });
+    await page.locator('.step[data-i="0"]').click(); await saved();
+    await page.locator('.step[data-i="0"]').click(); await saved();
+    r = await api('/api/docs/kaavi/reading');
+    check('reading: a save from another phone is merged, not lost', r.body.state.books.b2 === true && r.body.state.books.b1 === true && r.body.state.days[todayKey].every(Boolean) && r.body.state.neat[todayKey] === 3);
+
+    // printable sheet: right prompt and line count per weekday, current book filled in, fits one page
+    const sp = page; // same page and cookies; this is the last browser block
+    await sp.setViewportSize({ width: 703, height: 965 }); // A4 printable width, US Letter printable height: the tight side of each
+    await sp.goto(H('kaavi') + '/reading/sheet/?d=2026-11-13');
+    await sp.waitForFunction(() => document.getElementById('book').textContent === 'The Yellow House Mystery', null, { timeout: 10000 });
+    check('sheet: Friday has the write-up prompt and 12 lines', (await sp.locator('#skill').textContent()) === 'Friday write-up' && (await sp.locator('.line').count()) === 12);
+    check('sheet: shows the book he is on', (await sp.locator('#book').textContent()) === 'The Yellow House Mystery');
+    await sp.emulateMedia({ media: 'print' });
+    for (const [d, skill, lines] of [['2026-11-09', 'Character trait', 8], ['2026-11-10', 'Problem and action', 8], ['2026-11-11', 'How a character changes', 8], ['2026-11-12', 'The lesson', 8], ['2026-11-13', 'Friday write-up', 12], ['2026-11-14', 'Weekend bonus', 6]]) {
+      await sp.goto(H('kaavi') + '/reading/sheet/?d=' + d); await sp.waitForSelector('.line');
+      const h = await sp.evaluate(() => document.getElementById('sheet').getBoundingClientRect().height);
+      check(`sheet ${d}: "${skill}", ${lines} lines, fits one printed page`, (await sp.locator('#skill').textContent()) === skill && (await sp.locator('.line').count()) === lines && h <= 965, `height=${Math.round(h)}px`);
+    }
+    check('sheet: the toolbar is hidden when printing', !(await sp.locator('.bar').isVisible()));
+    await sp.emulateMedia({ media: 'screen' });
     check('no JavaScript errors on the pages', errors.length === 0, errors.join(' | '));
     await browser.close();
   } finally { await stop(dev); resend.close(); }

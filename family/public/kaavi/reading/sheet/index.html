@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Reading Quest writing sheet</title>
+<style>
+/* A one-page worksheet. Always light, always black on white, sized for US Letter and A4. */
+@page{margin:12mm}
+:root{color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;background:#fff;color:#111;font:14px/1.35 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif}
+.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;background:#17202a;color:#fff;flex-wrap:wrap}
+.bar a{color:#fff;text-decoration:none;font-weight:600}
+.bar .btns{display:flex;gap:8px;flex-wrap:wrap}
+.bar button,.bar .alt{font:600 14px inherit;font-family:inherit;border:0;border-radius:8px;padding:10px 14px;background:#e0601f;color:#fff;cursor:pointer;text-decoration:none}
+.bar .alt{background:#3a4654}
+.sheet{max-width:186mm;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:2px solid #111;padding-bottom:6px}
+h1{font-size:20px;margin:0;letter-spacing:.01em}
+.meta{font-size:13px;text-align:right;line-height:1.7}
+.meta .blank{display:inline-block;min-width:22mm;border-bottom:1px solid #111}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
+.words{display:grid;gap:2px}
+.word{display:flex;align-items:flex-end;gap:6px;height:11mm;font-size:13px;color:#444}
+.word i{flex:3;border-bottom:1px solid #111;height:100%}
+.word u{flex:1;border-bottom:1px solid #111;height:100%;text-decoration:none}
+.word span{padding-bottom:1mm}
+.q{font-size:15px;font-weight:600;margin:2px 0 4px}
+ol{margin:0 0 6px;padding-left:20px;font-size:13px;color:#222}
+.lines{margin-top:4px}
+.line{position:relative;height:10mm;border-bottom:1px solid #111}
+.line::before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px dashed #9aa3ad}
+.check{display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font-size:12.5px}
+.check div::before{content:"";display:inline-block;width:3.4mm;height:3.4mm;border:1px solid #111;margin-right:6px;vertical-align:-0.5mm}
+.grown{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:6px;border-top:1px solid #111;font-size:13px}
+.grown b{font-size:20px;letter-spacing:6px}
+@media print{.bar{display:none}.sheet{padding:0;max-width:none}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <a href="/reading/">← Back to the mission</a>
+  <div class="btns"><a class="alt" id="tomorrow" href="#">Next day's sheet</a><button type="button" onclick="window.print()">Print this sheet</button></div>
+</div>
+<div class="sheet" id="sheet">
+  <header>
+    <h1>Kaavi's Reading Quest</h1>
+    <div class="meta"><span id="date"></span><br>Book: <b id="book">The Boxcar Children</b> · Chapter <span class="blank">&nbsp;</span></div>
+  </header>
+
+  <h2>1 · Two tricky words: write the word, then split it into parts</h2>
+  <div class="words">
+    <div class="word"><i></i><span>=</span><u></u><span>/</span><u></u><span>/</span><u></u></div>
+    <div class="word"><i></i><span>=</span><u></u><span>/</span><u></u><span>/</span><u></u></div>
+  </div>
+
+  <h2>2 · Today's writing: <span id="skill"></span></h2>
+  <p class="q" id="q"></p>
+  <ol id="how"></ol>
+  <div class="lines" id="lines"></div>
+
+  <h2>3 · Check your own writing before you show it</h2>
+  <div class="check">
+    <div>Capital letter to start, period to end</div>
+    <div>Finger space between words</div>
+    <div>Letters sit on the line, same size</div>
+    <div>Quote is in "quotation marks"</div>
+    <div>Full sentences, not one word</div>
+    <div>I read it back out loud once</div>
+  </div>
+  <div class="grown"><span>Grown-up check: circle the stars, then tap them on the mission page.</span><b>☆ ☆ ☆</b></div>
+</div>
+<script src="/reading/plan.js"></script>
+<script>
+(function(){
+  var Q = window.QUEST, params = new URLSearchParams(location.search);
+  var day = Q.isDate(params.get('d')) ? params.get('d') : Q.ymd(new Date());
+  var d = Q.parse(day), pr = Q.promptFor(day);
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  document.getElementById('date').textContent = d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  document.getElementById('skill').textContent = pr.skill;
+  document.getElementById('q').textContent = pr.q;
+  document.getElementById('how').innerHTML = pr.how.map(function(h){ return '<li>' + esc(h) + '</li>'; }).join('');
+  var lines = ''; for(var i = 0; i < pr.lines; i++) lines += '<div class="line"></div>';
+  document.getElementById('lines').innerHTML = lines;
+  document.title = 'Reading Quest sheet · ' + day;
+  var next = Q.parse(day); do { next.setDate(next.getDate() + 1); } while(Q.isWeekend(next));
+  document.getElementById('tomorrow').href = '?d=' + Q.ymd(next);
+  // Fill in the book he is on (first one not finished). The sheet still prints fine if this fails.
+  fetch('/api/docs/kaavi/reading', {credentials:'same-origin', cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(b){
+    if(!b) return; var book = Q.currentBook(Q.norm(b.state)); if(book) document.getElementById('book').textContent = book.t;
+  }).catch(function(){});
+})();
+</script>
+</body>
+</html>
