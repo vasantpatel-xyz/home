@@ -28,20 +28,24 @@ else
   echo "No Resend key at $RESEND_ITEM — the daily digest email stays off. Add the item and re-run deploy.sh to enable it."
 fi
 
-DOMAIN="$(grep -oE 'pattern *= *"[^"]+"' wrangler.toml | head -1 | sed -E 's/.*"([^"]+)"/\1/')"
+DOMAINS="$(grep -oE 'pattern *= *"[^"]+"' wrangler.toml | sed -E 's/.*"([^"]+)"/\1/')"
 echo
 echo "Deployed. Smoke test:"
-for i in 1 2 3 4 5 6; do
-  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$DOMAIN/healthz" || true)"
-  if [ "$code" = "200" ]; then echo "  https://$DOMAIN/healthz -> 200 OK"; break; fi
-  if [ "$code" = "302" ]; then echo "  https://$DOMAIN/healthz -> 302 (Cloudflare Access is in front of the whole site: good)"; break; fi
-  echo "  https://$DOMAIN/healthz -> $code (DNS/cert may still be propagating, retry $i/6)"; sleep 10
+for d in $DOMAINS; do
+  for i in 1 2 3 4 5 6; do
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$d/healthz" || true)"
+    case "$code" in
+      200) echo "  https://$d/healthz -> 200 OK"; break;;
+      302) echo "  https://$d/healthz -> 302 (Cloudflare Access is in front of the whole site: good)"; break;;
+      *)   echo "  https://$d/healthz -> $code (DNS/cert may still be propagating, retry $i/6)"; sleep 10;;
+    esac
+  done
 done
-home="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$DOMAIN/" || true)"
+home="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$(printf '%s\n' "$DOMAINS" | head -1)/" || true)"
 case "$home" in
-  503) echo "  https://$DOMAIN/ -> 503 (expected until setup-access.sh has run)";;
-  302) echo "  https://$DOMAIN/ -> 302 redirect to the Cloudflare Access login (login gate is live)";;
-  *)   echo "  https://$DOMAIN/ -> $home";;
+  503) echo "  home -> 503 (expected until setup-access.sh has run)";;
+  302) echo "  home -> 302 redirect to the Cloudflare Access login (login gate is live)";;
+  *)   echo "  home -> $home";;
 esac
 echo
 echo "Next: bash scripts/setup-access.sh you@example.com partner@example.com   (everyone who may open the site)"

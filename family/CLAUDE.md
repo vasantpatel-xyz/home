@@ -39,7 +39,7 @@ Alternative without 1Password: if `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT
 bash scripts/deploy.sh
 ```
 
-Expected: wrangler uploads `family-site` with its static pages, binds the KV namespace, attaches the custom domain `family.vasantpatel.xyz`, sets the Resend secret if the 1Password item exists, and the smoke test prints `/healthz -> 200` and `/ -> 503 (expected until setup-access.sh has run)`. The 503 is correct: the site refuses to serve anything until the login gate exists.
+Expected: wrangler uploads `family-site` with its static pages, binds the KV namespace, attaches the five custom domains (`family.`, `kaavi.`, `kaveera.`, `kai.`, `ami.vasantpatel.xyz`), sets the Resend secret if the 1Password item exists, and the smoke test prints `/healthz -> 200` and `/ -> 503 (expected until setup-access.sh has run)`. The 503 is correct: the site refuses to serve anything until the login gate exists.
 
 **If it fails**
 
@@ -78,7 +78,7 @@ git add wrangler.toml && git commit -m "Wire family site to its Cloudflare Acces
 
 Tell the user, in these words or close to them:
 
-> The site is live at https://family.vasantpatel.xyz. Open it on your phone: Cloudflare emails you a one-time code, enter it, and the site loads. The move board is under 51 Hartlander. Tick one item, pull to refresh, and confirm it stays ticked. Everyone on the email list can do the same and sees the same board. Each person also has a page and a personal list at /kaavi, /kaveera, /kai and /ami. Logins last 30 days per device.
+> The sites are live: https://family.vasantpatel.xyz for shared things (the move board is under 51 Hartlander), and https://kaavi.vasantpatel.xyz, kaveera., kai., ami.vasantpatel.xyz for each person. Open one on your phone: Cloudflare emails you a one-time code, enter it, and it loads; the same login carries across all five. Tick one item on the move board, pull to refresh, and confirm it stays ticked. Logins last 30 days per device.
 >
 > The login is a one-time code by email today. To add Google sign-in (password plus Google's 2-step verification) follow "Stronger login" in the README; it is a five-minute dashboard step.
 

@@ -5,14 +5,22 @@ from `public/` plus a tiny JSON API; shared lists live in Workers KV; Cloudflare
 Access decides who may open any of it. Every person and every project gets a path.
 
 ```
-/                       family home
-/51-hartlander/         project hub
-/51-hartlander/move/    the move board (13 → 51, Nov 14)
-/kaavi/  /kaveera/  /kai/  /ami/      personal spaces
-/kaavi/list/ …          a shared checklist per person
-/api/boards/<path>      JSON behind every list
-/api/me                 who is signed in
-/healthz                the only page without login
+family.vasantpatel.xyz/                      things that affect everyone
+family.vasantpatel.xyz/51-hartlander/        project hub
+family.vasantpatel.xyz/51-hartlander/move/   the move board (13 → 51, Nov 14)
+kaavi.vasantpatel.xyz/                       Kaavi's home: lists his pages
+kaavi.vasantpatel.xyz/reading/               Reading Quest
+kaavi.vasantpatel.xyz/list/                  his checklist
+kaveera. / kai. / ami.vasantpatel.xyz/       the same shape for each person
+<any host>/api/boards/<id>, /api/docs/<id>   JSON behind every page (ids carry the person: kaavi/list)
+<any host>/healthz                           the only path without login
+```
+
+One worker serves all five hostnames. The first label of the hostname picks the
+folder under `public/` (`public/family/`, `public/kaavi/`, …); `/assets/*` and
+the 404 page come from `public/_shared/`. Each home page lists that site's own
+paths, and the family home links out to each person's site. One Cloudflare
+Access application covers all five hostnames, so one login works everywhere.
 ```
 
 ```
@@ -39,7 +47,7 @@ worker checks on every request.
 - **Today (set up by the script):** one-time PIN. Cloudflare emails a code to an allowed address. That is one factor (control of the mailbox) plus whatever protects the mailbox.
 - **Stronger login (recommended, five minutes in the dashboard):** add Google as a login method. Each family member then signs in with their Google account, so the password *and* Google's 2-Step Verification apply. Zero Trust dashboard → Settings → Authentication → Login methods → Add new → Google. You create an OAuth client in Google Cloud console as the page describes, paste its client id/secret, then in the Access application's policy choose *Include → Emails* as before. Keep one-time PIN enabled too as the fallback for a kid's device.
 - **Kids without email:** a parent signs in once on the child's device. Sessions last 30 days (`session_duration` in `setup-access.sh`).
-- **Who can see what:** today one policy covers the whole site. Access policies can be scoped to a path, e.g. a second application for `family.vasantpatel.xyz/ami` with only Ami's address, if a space should be private to one person.
+- **Who can see what:** today one application and one email list cover all five hostnames. If a person's site should be private to them, give that hostname its own Access application with its own policy; the worker already accepts several audiences (comma-separate them in `ACCESS_AUD`).
 
 ## Deploying
 
@@ -76,10 +84,12 @@ Network hosts the deploy touches: `api.cloudflare.com`, the npm registry,
 
 Everything static is a folder under `public/`. `deploy.sh` bundles it into the worker (`scripts/bundle-assets.mjs`), so there is no separate upload step; for local work run `npm run bundle` after editing pages.
 
-1. Create `public/<person>/<tool>/index.html` (copy any existing page for the head and the top bar).
-2. Link it from `public/<person>/index.html` in the "tools" card.
-3. For a new shared checklist, copy `public/kai/list/index.html` and change `data-board` (the API id, lowercase and slashes) and `data-title`. It starts empty with a "To do" section; sections can be added on the page.
-4. `bash scripts/deploy.sh`.
+1. Create `public/<person>/<tool>/index.html` (copy any existing page for the head and the top bar). It is served at `https://<person>.vasantpatel.xyz/<tool>/`.
+2. Link it from `public/<person>/index.html`, the home that lists that site's paths.
+3. For a new shared checklist, copy `public/kai/list/index.html` and change `data-board` (the API id, lowercase with slashes, e.g. `kai/chores`) and `data-title`. It starts empty with a "To do" section; sections can be added on the page.
+4. Something that affects everyone goes under `public/family/` instead.
+5. A new person or group means a new hostname: add a route in `wrangler.toml`, a folder under `public/`, the name in `SITES` in `src/worker.js`, then `deploy.sh` and `setup-access.sh` (which adds the hostname to the Access app).
+6. `bash scripts/deploy.sh`.
 
 Rules the API enforces on every board: at most 30 sections and 500 items, text
 trimmed to 400 characters, only `http(s)` links kept, version check on every save.

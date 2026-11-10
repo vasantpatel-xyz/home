@@ -5,7 +5,9 @@
 //   GET  /api/boards/<path>        { version, state, updatedAt, updatedBy }
 //   PUT  /api/boards/<path>        { version, state }   (version must match; 409 otherwise)
 //   GET/PUT /api/docs/<path>       same shape, any JSON object up to 64 KB (used by the reading page)
-//   *    everything else           static files from public/, bundled into the worker at deploy time
+//   *    everything else           static files, bundled into the worker at deploy time, chosen by hostname:
+//                                  family.vasantpatel.xyz -> public/family/, kaavi.vasantpatel.xyz -> public/kaavi/, …
+//                                  /assets/* and the 404 page come from public/_shared/ on every host
 //   cron                           daily digest email of open move items (needs RESEND_API_KEY)
 //
 // Every request except /healthz must carry a valid Cloudflare Access JWT. The
@@ -20,6 +22,17 @@ import STATIC from './assets.generated.js'; // built by scripts/bundle-assets.mj
 
 const SEEDS = { '51-hartlander/move': moveSeed };
 const BOARD_ID = /^[a-z0-9-]+(\/[a-z0-9-]+)*$/;
+const SITES = ['family', 'kaavi', 'kaveera', 'kai', 'ami'];
+
+function siteFor(request, url, env) {
+  if (env.ALLOW_UNAUTHENTICATED === 'true') {
+    // local dev only: wrangler dev rewrites Host to localhost, so tests pick the site with a header or cookie
+    const h = request.headers.get('x-dev-site') || cookie(request, 'dev-site');
+    if (h && SITES.includes(h)) return h;
+  }
+  const sub = url.hostname.split('.')[0];
+  return SITES.includes(sub) ? sub : 'family';
+}
 const MAX_BODY = 256 * 1024, MAX_ITEMS = 500, MAX_TEXT = 400, MAX_URL = 1000, MAX_GROUPS = 30;
 
 export default {
@@ -48,7 +61,7 @@ export default {
     }
     if (url.pathname.startsWith('/api/')) return json({ error: 'not_found' }, 404);
 
-    return serveStatic(request, url);
+    return serveStatic(request, url, siteFor(request, url, env));
   },
 
   async scheduled(event, env, ctx) {
@@ -60,16 +73,17 @@ export default {
 
 const STATIC_HEADERS = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
 
-function serveStatic(request, url) {
+function serveStatic(request, url, site) {
   if (request.method !== 'GET' && request.method !== 'HEAD') return text('Method not allowed', 405, { Allow: 'GET, HEAD' });
   let path = url.pathname;
   if (path.endsWith('/')) path += 'index.html';
-  let asset = STATIC[path];
-  if (!asset && STATIC[url.pathname + '/index.html']) {
-    return Response.redirect(url.origin + url.pathname + '/' + url.search, 301); // /kaavi -> /kaavi/
+  const root = path.startsWith('/assets/') ? '/_shared' : '/' + site;
+  let asset = STATIC[root + path];
+  if (!asset && STATIC[root + url.pathname + '/index.html']) {
+    return Response.redirect(url.origin + url.pathname + '/' + url.search, 301); // /reading -> /reading/
   }
   let status = 200;
-  if (!asset) { asset = STATIC['/404.html']; status = 404; }
+  if (!asset) { asset = STATIC['/_shared/404.html']; status = 404; }
   if (!asset) return text('Not found', 404);
   const body = asset.bin ? b64urlToBytes(asset.b.replace(/\+/g, '-').replace(/\//g, '_')) : asset.b;
   return new Response(request.method === 'HEAD' ? null : body, { status, headers: { 'content-type': asset.t, ...STATIC_HEADERS } });
@@ -205,7 +219,8 @@ async function verifyAccessJwt(token, env) {
   const now = Math.floor(Date.now() / 1000);
   if (payload.iss !== issuer) throw new Error('iss');
   const aud = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
-  if (!aud.includes(env.ACCESS_AUD)) throw new Error('aud');
+  const allowed = String(env.ACCESS_AUD).split(',').map((a) => a.trim()).filter(Boolean);
+  if (!aud.some((a) => allowed.includes(a))) throw new Error('aud');
   if (typeof payload.exp !== 'number' || payload.exp < now - 30) throw new Error('exp');
   if (typeof payload.nbf === 'number' && payload.nbf > now + 30) throw new Error('nbf');
 

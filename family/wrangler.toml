@@ -9,7 +9,11 @@ compatibility_date = "2026-10-01"
 workers_dev = false
 preview_urls = false
 routes = [
-  { pattern = "family.vasantpatel.xyz", custom_domain = true }
+  { pattern = "family.vasantpatel.xyz",  custom_domain = true },
+  { pattern = "kaavi.vasantpatel.xyz",   custom_domain = true },
+  { pattern = "kaveera.vasantpatel.xyz", custom_domain = true },
+  { pattern = "kai.vasantpatel.xyz",     custom_domain = true },
+  { pattern = "ami.vasantpatel.xyz",     custom_domain = true }
 ]
 
 # Static pages live in public/ and are bundled into the worker by

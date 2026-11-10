@@ -20,8 +20,9 @@ API="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
 cf() { curl -sS --fail-with-body -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" "$@"; }
 die() { echo "ERROR: $*" >&2; exit 1; }
 
-DOMAIN="$(grep -oE 'pattern *= *"[^"]+"' wrangler.toml | head -1 | sed -E 's/.*"([^"]+)"/\1/')"
-[ -n "$DOMAIN" ] || die "could not read the route pattern from wrangler.toml"
+DOMAINS="$(grep -oE 'pattern *= *"[^"]+"' wrangler.toml | sed -E 's/.*"([^"]+)"/\1/')"
+DOMAIN="$(printf '%s\n' "$DOMAINS" | head -1)"
+[ -n "$DOMAIN" ] || die "could not read the route patterns from wrangler.toml"
 
 # 1. Zero Trust team domain (e.g. myteam.cloudflareaccess.com)
 org="$(cf "$API/access/organizations" 2>&1)" || die "could not read the Zero Trust organization. Token needs 'Access: Organizations, Identity Providers, and Groups: Read'. Response: $org"
@@ -39,10 +40,12 @@ echo "Zero Trust team domain: $TEAM"
 
 # 2. Create or update the self-hosted Access application for the board domain
 include="$(printf '%s\n' "$@" | jq -R 'select(length>0) | {email:{email:.}}' | jq -s .)"
-body="$(jq -n --arg d "$DOMAIN" --argjson inc "$include" '{
+domains_json="$(printf '%s\n' "$DOMAINS" | jq -R 'select(length>0)' | jq -s .)"
+body="$(jq -n --arg d "$DOMAIN" --argjson all "$domains_json" --argjson inc "$include" '{
   name: "Family site",
   type: "self_hosted",
   domain: $d,
+  self_hosted_domains: $all,
   session_duration: "720h",
   auto_redirect_to_identity: false,
   app_launcher_visible: false,
@@ -50,7 +53,7 @@ body="$(jq -n --arg d "$DOMAIN" --argjson inc "$include" '{
 }')"
 
 apps="$(cf "$API/access/apps?per_page=100")" || die "could not list Access apps. Token needs 'Access: Apps and Policies: Edit'."
-APP_ID="$(printf '%s' "$apps" | jq -r --arg d "$DOMAIN" '[.result[]? | select(.domain==$d)][0].id // empty')"
+APP_ID="$(printf '%s' "$apps" | jq -r --arg d "$DOMAIN" '[.result[]? | select(.domain==$d or ((.self_hosted_domains // []) | index($d)))][0].id // empty')"
 
 if [ -n "$APP_ID" ]; then
   echo "Updating existing Access app $APP_ID for $DOMAIN"
@@ -62,7 +65,8 @@ fi
 printf '%s' "$res" | jq -e '.success == true' >/dev/null || die "Cloudflare rejected the Access app: $(printf '%s' "$res" | jq -c '.errors')"
 AUD="$(printf '%s' "$res" | jq -r '.result.aud')"
 APP_ID="$(printf '%s' "$res" | jq -r '.result.id')"
-echo "Access app $APP_ID ready. Allowed: $*"
+echo "Access app $APP_ID ready for: $(printf '%s' "$DOMAINS" | tr '\n' ' ')"
+echo "Allowed: $*"
 
 # 3. Write the audience + team domain into wrangler.toml and redeploy
 DIGEST="$(IFS=,; echo "$*")"
@@ -76,5 +80,7 @@ npx wrangler deploy
 
 echo
 echo "Done. Open https://$DOMAIN on your phone — you should get a Cloudflare login page asking for a one-time code."
-code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$DOMAIN/" || true)"
-echo "Unauthenticated check: https://$DOMAIN/ -> $code (302 = login gate is working)"
+for d in $DOMAINS; do
+  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "https://$d/" || true)"
+  echo "Unauthenticated check: https://$d/ -> $code (302 = login gate is working)"
+done

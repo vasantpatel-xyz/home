@@ -37,6 +37,7 @@ async function stop(p) {
   for (let i = 0; i < 40; i++) { try { await fetch(`${BASE}/healthz`); await sleep(250); } catch { return; } }
   throw new Error('port still in use after stopping wrangler dev');
 }
+const site = (name, path, opts = {}) => fetch(BASE + path, { ...opts, headers: { 'x-dev-site': name, ...(opts.headers || {}) } });
 const api = (path = MOVE, opts = {}) => fetch(BASE + path, opts).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) }));
 const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
 
@@ -96,13 +97,17 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
 
     // static pages bundled into the worker
     r = await fetch(BASE + '/');
-    check('GET / serves the family home, no-store', r.status === 200 && (await r.text()).includes('Patel') && r.headers.get('cache-control') === 'no-store');
-    for (const p of ['/kaavi/', '/kaavi/reading/', '/kaveera/', '/kai/', '/ami/', '/51-hartlander/', '/51-hartlander/move/', '/kaavi/list/', '/assets/board.js']) {
-      check(`GET ${p} -> 200`, (await fetch(BASE + p)).status === 200);
+    check('unknown host falls back to the family home, no-store', r.status === 200 && (await r.text()).includes('Patel') && r.headers.get('cache-control') === 'no-store');
+    for (const [h, p] of [['family', '/51-hartlander/'], ['family', '/51-hartlander/move/'], ['kaavi', '/'], ['kaavi', '/reading/'], ['kaavi', '/list/'], ['kaveera', '/'], ['kaveera', '/list/'], ['kai', '/'], ['ami', '/list/'], ['ami', '/assets/board.js'], ['kaavi', '/assets/site.css']]) {
+      check(`${h}: GET ${p} -> 200`, (await site(h, p)).status === 200);
     }
-    r = await fetch(BASE + '/kaavi');
-    check('/kaavi (no slash) redirects to /kaavi/', r.status === 200 && r.url.endsWith('/kaavi/'));
-    r = await fetch(BASE + '/does-not-exist/');
+    r = await site('kaavi', '/');
+    check('kaavi home lists /reading and /list', (t => t.includes('/reading/') && t.includes('/list/'))(await r.text()));
+    check('kaavi site has no /51-hartlander/', (await site('kaavi', '/51-hartlander/')).status === 404);
+    check('family site has no /reading/', (await site('family', '/reading/')).status === 404);
+    r = await site('kaavi', '/reading');
+    check('/reading (no slash) redirects to /reading/', r.status === 200 && r.url.endsWith('/reading/'));
+    r = await site('kai', '/does-not-exist/');
     check('unknown page -> 404 with custom page', r.status === 404 && (await r.text()).includes('Nothing here yet'));
 
     // cron digest
@@ -112,10 +117,14 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     check('digest email: bearer key, both recipients, open items in body', sent[0] && sent[0].auth === 'Bearer re_test' && sent[0].body.to.length === 2 && sent[0].body.text.includes('Buy sofa') && !sent[0].body.text.includes('EB Residency'), JSON.stringify(sent[0] && sent[0].body.to));
 
     // browser
-    const browser = await chromium.launch();
+    // real hostnames mapped to the local worker, so host-based routing is what the browser exercises
+    const browser = await chromium.launch({ args: ['--host-resolver-rules=MAP *.vasantpatel.xyz 127.0.0.1'] });
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     const errors = []; page.on('pageerror', (e) => errors.push(String(e)));
-    await page.goto(BASE + '/51-hartlander/move/');
+    const H = (h) => `http://${h}.vasantpatel.xyz:${PORT}`;
+    // wrangler dev rewrites Host to localhost, so tell the worker which site each hostname is (dev mode only)
+    await page.context().addCookies(['family', 'kaavi', 'kaveera', 'kai', 'ami'].map((h) => ({ name: 'dev-site', value: h, domain: `${h}.vasantpatel.xyz`, path: '/' })));
+    await page.goto(H('family') + '/51-hartlander/move/');
     await page.waitForSelector('li input[type=checkbox]');
     check('move board renders 27 checkboxes and the countdown', (await page.locator('li input[type=checkbox]').count()) === 27 && !(await page.locator('#countdown').isHidden()));
     await page.locator('#c-ami-0').check();
@@ -135,7 +144,7 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     check('conflict merged: both ticks saved', r.body.state.groups[0].items[3].d === true && r.body.state.groups[1].items[1].d === true);
 
     // a personal list: title from the page, add section, countdown hidden
-    await page.goto(BASE + '/kaavi/list/');
+    await page.goto(H('kaavi') + '/list/');
     await page.waitForSelector('#addgroup input');
     check('personal list shows its title and no countdown', (await page.locator('#title').textContent()) === "Kaavi's list" && await page.locator('#countdown').isHidden());
     await page.fill('#add-todo', 'Finish chapter 3'); await page.press('#add-todo', 'Enter');
@@ -147,7 +156,7 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     check('signed-in name shows in the top bar', (await page.locator('#me').textContent()) === 'local-dev');
 
     // Kaavi's reading page: 4 steps, grid of 40 days, 4 books; tap steps -> saved -> survives reload
-    await page.goto(BASE + '/kaavi/reading/');
+    await page.goto(H('kaavi') + '/reading/');
     await page.waitForSelector('.step');
     check('reading: 5 steps, 40 days, 4 books rendered', (await page.locator('.step').count()) === 5 && (await page.locator('.day').count()) === 40 && (await page.locator('.book').count()) === 4);
     check('reading: book 1 shows as finished from the API save', await page.locator('.book.done').count() === 1);
@@ -186,7 +195,7 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     check('garbage token -> 401', (await api(MOVE, H('garbage'))).status === 401);
     check('valid token via header -> 200', (await api(MOVE, H(sign(good)))).status === 200);
     check('valid token via CF_Authorization cookie -> 200', (await api(MOVE, { headers: { cookie: `CF_Authorization=${sign(good)}` } })).status === 200);
-    check('valid token: static page -> 200', (await fetch(BASE + '/kai/', H(sign(good)))).status === 200);
+    check('valid token: static page -> 200', (await fetch(BASE + '/51-hartlander/', H(sign(good)))).status === 200);
     check('expired token -> 401', (await api(MOVE, H(sign({ ...good, exp: now - 120 })))).status === 401);
     check('wrong audience -> 401', (await api(MOVE, H(sign({ ...good, aud: ['b'.repeat(64)] })))).status === 401);
     check('wrong issuer -> 401', (await api(MOVE, H(sign({ ...good, iss: 'https://evil.cloudflareaccess.com' })))).status === 401);
