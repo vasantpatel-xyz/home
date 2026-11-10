@@ -223,3 +223,9 @@ If you have questions, reply to this email.
 ## Pending
 
 - Get `vasantpatel.xyz` unblocked in Prisma Browser URL filtering (recategorization or admin exception in Prisma console)
+
+---
+
+## Move Board
+
+`move-board/` is a separate Cloudflare Worker: the shared household move checklist at `move.vasantpatel.xyz`, behind Cloudflare Access. It is deployed with its own scripts, not with this Pages site. See [`move-board/README.md`](move-board/README.md) and [`move-board/CLAUDE.md`](move-board/CLAUDE.md).

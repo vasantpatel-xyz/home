@@ -1,0 +1,56 @@
+{
+  "title": "13 → 51 Hartlander",
+  "move": "2026-11-14",
+  "groups": [
+    {
+      "id": "v",
+      "name": "V",
+      "items": [
+        { "t": "Property Mgmt – CMS, others", "d": false },
+        { "t": "NB Landlord Registration", "d": false, "u": "https://www.northbrunswicknj.gov/705/Landlord-Registration" },
+        { "t": "Pack up garage, your closet, your office", "d": false },
+        { "t": "Buy sofa", "d": false },
+        { "t": "Finalize / approve dryer permit", "d": false },
+        { "t": "Finalize playground layout – green light to Edgar for cement / stake in", "d": false },
+        { "t": "Finalize water machine design", "d": false },
+        { "t": "Install kitchen cabinet slide-outs with Ami OR pay Edgar", "d": false },
+        { "t": "Buy Kai's bed frame – must fit under loft", "d": false, "s": "Space under loft: 75½\" W × 56½\" D × 55½\" H", "u": "https://rhteen.rh.com/us/en/catalog/product/product.jsp/rhtn_prod106330" },
+        { "t": "Rake leaves", "d": false }
+      ]
+    },
+    {
+      "id": "ami",
+      "name": "Ami",
+      "items": [
+        { "t": "Pack up Ami's closet, Kai's chest, bookshelf", "d": false },
+        { "t": "Pack up all corners of master bedroom, kids' rooms", "d": false },
+        { "t": "Pack up storage closets", "d": false },
+        { "t": "Pack up remaining linen closet", "d": false },
+        { "t": "Pack up laundry", "d": false },
+        { "t": "Pack up kids' closets", "d": false },
+        { "t": "Schedule blinds at 51", "d": false },
+        { "t": "Schedule cleaning lady at 51 and 13", "d": false },
+        { "t": "Figure out robot mop situation", "d": false },
+        { "t": "Donation pick-up", "d": false },
+        { "t": "Schedule movers", "d": false }
+      ]
+    },
+    {
+      "id": "mom",
+      "name": "Mom",
+      "items": [
+        { "t": "Pack up kitchen", "d": false },
+        { "t": "Pack up pantry", "d": false },
+        { "t": "EB Residency", "d": true },
+        { "t": "Finish staining pantry at 51", "d": true }
+      ]
+    },
+    {
+      "id": "misc",
+      "name": "Confirmed dates",
+      "items": [
+        { "t": "King & Cali King mattress – Costco delivery 11/9", "d": true }
+      ]
+    }
+  ]
+}

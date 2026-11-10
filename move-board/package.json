@@ -1,0 +1,13 @@
+{
+  "name": "move-board",
+  "private": true,
+  "description": "Shared household move checklist on Cloudflare Workers + KV, behind Cloudflare Access",
+  "scripts": {
+    "dev": "wrangler dev --port 8787 --var ALLOW_UNAUTHENTICATED:true",
+    "deploy": "bash scripts/deploy.sh",
+    "test": "bash scripts/test-local.sh"
+  },
+  "devDependencies": {
+    "wrangler": "4.159.0"
+  }
+}
