@@ -185,7 +185,8 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     await page.goto(H('kaavi') + '/51-hartlander/packing/');
     await page.waitForSelector('.empty');
     check('packing: empty list explains how to start; box field and edit buttons hidden until editing', (await page.locator('.empty').textContent()).includes('Start your list') && !(await page.locator('#boxfield').isVisible()) && !(await page.locator('#delbtn').isVisible()) && !(await page.locator('#canceledit').isVisible()));
-    await page.fill('#f-t', 'Lego bin'); await page.fill('#f-from', 'my bedroom'); await page.fill('#f-to', 'Playroom'); await page.click('#addbtn'); await pkSaved();
+    await page.fill('#f-t', 'Lego bin'); await page.fill('#f-from', 'my bedroom'); await page.fill('#f-to', 'Playroom'); await page.fill('#f-fs', 'near my bed'); await page.fill('#f-ts', 'toy shelf'); await page.click('#addbtn'); await pkSaved();
+    check('packing: exact spots are shown with the thing and are not carried to the next one', (await page.locator('.prow .spec').first().textContent()).includes('near my bed') && (await page.locator('.prow .spec').first().textContent()).includes('Playroom, toy shelf') && (await page.inputValue('#f-fs')) === '' && (await page.inputValue('#f-from')) === 'My bedroom');
     await page.fill('#f-t', 'Desk lamp'); await page.fill('#f-to', 'My bedroom'); await page.click('#addbtn'); await pkSaved();
     check('packing: rooms carry over to the next thing, spelling is unified, pack view groups by where it is now', (await page.locator('.prow').count()) === 2 && (await page.locator('.box h2').allTextContents()).join('|') === 'My bedroom');
     await page.locator('.tick').first().click(); await page.waitForSelector('#chooser:not([hidden])');
@@ -202,7 +203,7 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     await page.fill('#f-box', 'k2'); await page.click('#addbtn'); await pkSaved();
     check('packing: after moving one thing, each box goes to one room', (await page.locator('.warn').count()) === 0 && (await page.locator('.box h2').allTextContents()).join('|') === 'Box K1 → Playroom|Box K2 → My bedroom');
     await page.emulateMedia({ media: 'print' });
-    check('packing: one printable label per box, everything else hidden in print', (await page.locator('.label').count()) === 2 && await page.locator('.label').first().isVisible() && !(await page.locator('#addform').isVisible()) && (await page.locator('.label .to').first().textContent()).includes('Playroom') && (await page.locator('.label .boxno').first().textContent()) === 'BOX K1');
+    check('packing: one printable label per box, everything else hidden in print', (await page.locator('.label').count()) === 2 && await page.locator('.label').first().isVisible() && !(await page.locator('#addform').isVisible()) && (await page.locator('.label .to').first().textContent()).includes('Playroom') && (await page.locator('.label .boxno').first().textContent()) === 'BOX K1' && (await page.locator('.label li').first().textContent()) === 'Lego bin (toy shelf)');
     await page.emulateMedia({ media: 'screen' });
     r = await api(PK);
     const other3 = structuredClone(r.body.state); other3.items.push({ id: 'parent1', t: 'Soccer cleats', from: 'Garage', to: 'Garage', box: '', s: 0 });

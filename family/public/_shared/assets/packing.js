@@ -16,7 +16,7 @@
   function norm(s){
     var items = (s && Array.isArray(s.items)) ? s.items : [];
     return { items: items.filter(function(i){ return i && typeof i.id === 'string' && typeof i.t === 'string' && clean(i.t, 120); }).slice(0, 500).map(function(i){
-      return { id: i.id, t: clean(i.t, 120), from: clean(i.from, 40), to: clean(i.to, 40), box: clean(i.box, 8).toUpperCase(), s: (i.s === 1 || i.s === 2) ? i.s : 0 }; }) };
+      return { id: i.id, t: clean(i.t, 120), from: clean(i.from, 40), fs: clean(i.fs, 60), to: clean(i.to, 40), ts: clean(i.ts, 60), box: clean(i.box, 8).toUpperCase(), s: (i.s === 1 || i.s === 2) ? i.s : 0 }; }) };
   }
   function canon(room, key){
     var low = room.toLowerCase(), i;
@@ -50,9 +50,10 @@
   function row(it, mode){
     var on = mode === 'unpack' ? it.s === 2 : it.s >= 1;
     var chip = it.box ? '<b class="chip">Box ' + esc(it.box) + '</b>' : '<b class="chip none">no box yet</b>';
-    var sub = mode === 'pack' ? 'goes to: ' + esc(it.to || 'not decided yet') + ' · ' + chip
-            : mode === 'unpack' ? chip + ' · was in: ' + esc(it.from || '?')
-            : esc(it.from || '?') + ' → ' + esc(it.to || 'not decided yet') + (it.s === 2 ? ' · placed' : it.s === 1 ? ' · packed' : ' · not packed');
+    var dest = esc(it.to || 'not decided yet') + (it.ts ? ', ' + esc(it.ts) : '');
+    var sub = mode === 'pack' ? (it.fs ? esc(it.fs) + ' · ' : '') + 'goes to: ' + dest + ' · ' + chip
+            : mode === 'unpack' ? (it.ts ? 'put it: ' + esc(it.ts) + ' · ' : '') + chip + ' · was in: ' + esc(it.from || '?')
+            : esc(it.from || '?') + ' → ' + dest + (it.s === 2 ? ' · placed' : it.s === 1 ? ' · packed' : ' · not packed');
     var label = (mode === 'unpack' ? 'Placed: ' : 'Packed: ') + it.t;
     return '<li class="prow' + (on ? ' done' : '') + '">'
       + (mode === 'boxes' ? '' : '<button type="button" class="tick" data-id="' + esc(it.id) + '" aria-pressed="' + on + '" aria-label="' + esc(label) + '">' + (on ? '✓' : '') + '</button>')
@@ -108,7 +109,7 @@
     // printable labels, one per box
     $('labels').innerHTML = boxes().map(function(g){
       var ds = dests(g[1]), fr = {}, frs = []; g[1].forEach(function(i){ var x = i.from || '?'; if(!fr[x]){ fr[x] = 1; frs.push(x); } });
-      return '<div class="label"><div class="who">' + esc(B.owner || '') + '</div><div class="boxno">BOX ' + esc(g[0]) + '</div><div class="to">→ ' + esc(ds.join(' + ')) + '</div><div class="from">' + esc(TO) + ' · packed at ' + esc(FROM) + ': ' + esc(frs.join(', ')) + '</div><ul>' + g[1].map(function(i){ return '<li>' + esc(i.t) + '</li>'; }).join('') + '</ul></div>';
+      return '<div class="label"><div class="who">' + esc(B.owner || '') + '</div><div class="boxno">BOX ' + esc(g[0]) + '</div><div class="to">→ ' + esc(ds.join(' + ')) + '</div><div class="from">' + esc(TO) + ' · packed at ' + esc(FROM) + ': ' + esc(frs.join(', ')) + '</div><ul>' + g[1].map(function(i){ return '<li>' + esc(i.t) + (i.ts ? ' (' + esc(i.ts) + ')' : '') + '</li>'; }).join('') + '</ul></div>';
     }).join('');
 
     $('formtitle').textContent = editing ? 'Change this thing' : 'Add a thing';
@@ -133,7 +134,7 @@
   function closeChooser(){ $('chooser').hidden = true; choosing = null; }
 
   function startEdit(it){
-    editing = it.id; $('f-t').value = it.t; $('f-from').value = it.from; $('f-to').value = it.to; $('f-box').value = it.box; render();
+    editing = it.id; $('f-t').value = it.t; $('f-from').value = it.from; $('f-fs').value = it.fs || ''; $('f-to').value = it.to; $('f-ts').value = it.ts || ''; $('f-box').value = it.box; render();
     $('addform').scrollIntoView({block:'center'}); $('f-t').focus();
   }
   function stopEdit(){ editing = null; $('addform').reset(); render(); }
@@ -188,9 +189,10 @@
   $('addform').addEventListener('submit', function(e){
     e.preventDefault();
     var t = clean($('f-t').value, 120), from = canon(clean($('f-from').value, 40), 'from'), to = canon(clean($('f-to').value, 40), 'to'), box = clean($('f-box').value, 8).toUpperCase();
+    var fs = clean($('f-fs').value, 60), ts = clean($('f-ts').value, 60);
     if(!t){ $('f-t').focus(); return; }
-    if(editing){ var id = editing; editing = null; change({type:'edit', id: id, f: {t: t, from: from, to: to, box: box}}); }
-    else { if(state.items.length >= 500){ setStatus('That is a lot of things! The list holds 500.', true); return; } change({type:'add', item: {id: uid(), t: t, from: from, to: to, box: '', s: 0}}); }
+    if(editing){ var id = editing; editing = null; change({type:'edit', id: id, f: {t: t, from: from, fs: fs, to: to, ts: ts, box: box}}); }
+    else { if(state.items.length >= 500){ setStatus('That is a lot of things! The list holds 500.', true); return; } change({type:'add', item: {id: uid(), t: t, from: from, fs: fs, to: to, ts: ts, box: '', s: 0}}); }
     $('addform').reset(); $('f-from').value = from; $('f-to').value = to; $('f-t').focus(); // keep the rooms: the next thing is usually in the same place
     if(editing === null) render();
   });
@@ -200,7 +202,7 @@
     lines.forEach(function(line){
       var p = line.split(/\s*[|,\t;]\s*/), t = clean((p[0] || '').replace(/^\s*(?:[-*•]\s*|\d+[.)]\s+)/, ''), 120);
       if(!t || state.items.length >= 500) return;
-      change({type:'add', item: {id: uid(), t: t, from: canon(clean(p[1], 40), 'from'), to: canon(clean(p[2], 40), 'to'), box: '', s: 0}}); added++;
+      change({type:'add', item: {id: uid(), t: t, from: canon(clean(p[1], 40), 'from'), fs: '', to: canon(clean(p[2], 40), 'to'), ts: '', box: '', s: 0}}); added++;
     });
     if(added){ $('bulktext').value = ''; $('bulk').open = false; setStatus('Added ' + added + (added === 1 ? ' thing' : ' things') + '. Saving…'); }
   });
