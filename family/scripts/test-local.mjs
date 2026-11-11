@@ -184,7 +184,7 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     const pkSaved = () => page.waitForFunction(() => document.getElementById('status').textContent === 'Saved', null, { timeout: 10000 });
     await page.goto(H('kaavi') + '/51-hartlander/packing/');
     await page.waitForSelector('.empty');
-    check('packing: empty list explains how to start', (await page.locator('.empty').textContent()).includes('Start your list'));
+    check('packing: empty list explains how to start; box field and edit buttons hidden until editing', (await page.locator('.empty').textContent()).includes('Start your list') && !(await page.locator('#boxfield').isVisible()) && !(await page.locator('#delbtn').isVisible()) && !(await page.locator('#canceledit').isVisible()));
     await page.fill('#f-t', 'Lego bin'); await page.fill('#f-from', 'my bedroom'); await page.fill('#f-to', 'Playroom'); await page.click('#addbtn'); await pkSaved();
     await page.fill('#f-t', 'Desk lamp'); await page.fill('#f-to', 'My bedroom'); await page.click('#addbtn'); await pkSaved();
     check('packing: rooms carry over to the next thing, spelling is unified, pack view groups by where it is now', (await page.locator('.prow').count()) === 2 && (await page.locator('.box h2').allTextContents()).join('|') === 'My bedroom');
@@ -197,7 +197,9 @@ const put = (path, body, headers = {}) => api(path, { method: 'PUT', headers: { 
     check('packing: both packed, progress updated', (await page.locator('#overallTxt').textContent()).startsWith('2 of 2 packed'));
     await page.locator('.tab[data-v="boxes"]').click();
     check('packing: a box headed to two rooms is flagged', (await page.locator('.warn').count()) === 1 && (await page.locator('.box h2').first().textContent()).includes('2 rooms'));
-    await page.locator('.edit').nth(1).click(); await page.fill('#f-box', 'k2'); await page.click('#addbtn'); await pkSaved();
+    await page.locator('.edit').nth(1).click();
+    check('packing: editing shows the box field and the remove button', await page.locator('#boxfield').isVisible() && await page.locator('#delbtn').isVisible());
+    await page.fill('#f-box', 'k2'); await page.click('#addbtn'); await pkSaved();
     check('packing: after moving one thing, each box goes to one room', (await page.locator('.warn').count()) === 0 && (await page.locator('.box h2').allTextContents()).join('|') === 'Box K1 → Playroom|Box K2 → My bedroom');
     await page.emulateMedia({ media: 'print' });
     check('packing: one printable label per box, everything else hidden in print', (await page.locator('.label').count()) === 2 && await page.locator('.label').first().isVisible() && !(await page.locator('#addform').isVisible()) && (await page.locator('.label .to').first().textContent()).includes('Playroom') && (await page.locator('.label .boxno').first().textContent()) === 'BOX K1');
